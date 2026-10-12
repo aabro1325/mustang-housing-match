@@ -8,7 +8,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: [["list"]],
-  use: { trace: "retain-on-failure" },
+  use: { trace: "retain-on-failure", viewport: { width: 420, height: 900 } },
   webServer: {
     command: "npx vite preview --outDir e2e/fixtures --port 4173 --strictPort",
     port: 4173,
