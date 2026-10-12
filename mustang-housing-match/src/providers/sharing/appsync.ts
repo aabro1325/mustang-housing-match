@@ -36,7 +36,7 @@ export const Q = {
   rotateInviteToken: `mutation Rotate($listId: String!, $newToken: String!) { rotateInviteToken(listId: $listId, newToken: $newToken) { inviteToken } }`,
   removeMember: `mutation RemoveMember($listId: String!, $memberId: String!) { removeMember(listId: $listId, memberId: $memberId) { ${CHANGE_FIELDS} } }`,
   leaveList: `mutation LeaveList($listId: String!) { leaveList(listId: $listId) { ${CHANGE_FIELDS} } }`,
-  addSavedListing: `mutation AddSaved($listId: String!, $listing: AWSJSON!, $commute: AWSJSON, $landlordQuestions: [String]) { addSavedListing(listId: $listId, listing: $listing, commute: $commute, landlordQuestions: $landlordQuestions) { ${CHANGE_FIELDS} } }`,
+  addSavedListing: `mutation AddSaved($listId: String!, $listing: AWSJSON!, $commute: AWSJSON, $landlordQuestions: [String!]) { addSavedListing(listId: $listId, listing: $listing, commute: $commute, landlordQuestions: $landlordQuestions) { ${CHANGE_FIELDS} } }`,
   updateSavedListing: `mutation UpdateSaved($listId: String!, $savedListingId: String!, $patch: AWSJSON!) { updateSavedListing(listId: $listId, savedListingId: $savedListingId, patch: $patch) { ${CHANGE_FIELDS} } }`,
   removeSavedListing: `mutation RemoveSaved($listId: String!, $savedListingId: String!) { removeSavedListing(listId: $listId, savedListingId: $savedListingId) { ${CHANGE_FIELDS} } }`,
   addNote: `mutation AddNote($listId: String!, $savedListingId: String!, $text: String!) { addNote(listId: $listId, savedListingId: $savedListingId, text: $text) { ${CHANGE_FIELDS} } }`,
