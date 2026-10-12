@@ -11,6 +11,7 @@ export function request(ctx) {
     operation: "TransactWriteItems",
     transactItems: [
       {
+        table: __TABLE_NAME__,
         operation: "ConditionCheck",
         key: util.dynamodb.toMapValues({ pk: listKey(ctx.args.listId), sk: "META" }),
         condition: {
@@ -19,6 +20,7 @@ export function request(ctx) {
         },
       },
       {
+        table: __TABLE_NAME__,
         operation: "UpdateItem",
         key: util.dynamodb.toMapValues({ pk: listKey(ctx.args.listId), sk: memberKey(me) }),
         update: {

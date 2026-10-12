@@ -1,5 +1,5 @@
 import { Amplify } from "aws-amplify";
-import { generateClient } from "aws-amplify/data";
+import { generateClient } from "aws-amplify/api";
 import { fetchAuthSession } from "aws-amplify/auth";
 import type { KeyValueStore } from "@/core/storage";
 import type { SharingProvider } from "@/core/sharing/provider";

@@ -226,9 +226,9 @@ if confirm "Run  npx ampx sandbox --identifier pilot --once --outputs-out-dir ./
   mkdir -p config
   AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" npx ampx sandbox --identifier pilot --once --outputs-out-dir ./config
   if [[ -f config/amplify_outputs.json ]]; then
-    region=$(node -e "const o=require('./config/amplify_outputs.json');process.stdout.write(o.data.aws_region||o.auth.aws_region||'')")
+    region=$(node -e "const o=require('./config/amplify_outputs.json');process.stdout.write(o.custom.sharedListApi.region||o.auth.aws_region||'')")
     pool=$(node -e "const o=require('./config/amplify_outputs.json');process.stdout.write(o.auth.identity_pool_id||'')")
-    url=$(node -e "const o=require('./config/amplify_outputs.json');process.stdout.write(o.data.url||'')")
+    url=$(node -e "const o=require('./config/amplify_outputs.json');process.stdout.write(o.custom.sharedListApi.url||'')")
     write_env VITE_AWS_REGION "$region"
     write_env VITE_COGNITO_IDENTITY_POOL_ID "$pool"
     write_env VITE_APPSYNC_GRAPHQL_ENDPOINT "$url"

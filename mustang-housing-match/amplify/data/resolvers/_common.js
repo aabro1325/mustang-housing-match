@@ -1,4 +1,4 @@
-// Not a resolver: shared helpers inlined by the APPSYNC_JS bundler via relative import.
+// Not a resolver: shared helpers bundled into each resolver by esbuild (see backend.ts). __TABLE_NAME__ is defined there.
 import { util } from "@aws-appsync/utils";
 
 export const listKey = (listId) => `LIST#${listId}`;

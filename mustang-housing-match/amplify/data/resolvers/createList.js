@@ -11,6 +11,7 @@ export function request(ctx) {
     operation: "TransactWriteItems",
     transactItems: [
       {
+        table: __TABLE_NAME__,
         operation: "PutItem",
         key: util.dynamodb.toMapValues({ pk: listKey(listId), sk: "META" }),
         attributeValues: util.dynamodb.toMapValues({
@@ -19,6 +20,7 @@ export function request(ctx) {
         condition: { expression: "attribute_not_exists(pk)" },
       },
       {
+        table: __TABLE_NAME__,
         operation: "PutItem",
         key: util.dynamodb.toMapValues({ pk: listKey(listId), sk: memberKey(me) }),
         attributeValues: util.dynamodb.toMapValues({

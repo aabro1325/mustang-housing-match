@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
     "icons": "node scripts/make-icons.mjs",
-    "check": "npm run typecheck && npm test && npm run build && npm run e2e"
+    "check": "npm run typecheck && npm test && npm run build && npm run e2e",
+    "outputs-to-env": "node scripts/outputs-to-env.mjs"
   },
   "keywords": [],
   "author": "",
