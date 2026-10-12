@@ -1,0 +1,48 @@
+/* Design tokens derived from the Figma frames (file Tvbv5dUte2Hbelu50lHS8d). The file defines no variables,
+   so these are read off the frames: deep green brand, cream notice band, soft grey canvas, white cards. */
+:root {
+  --color-brand: #1e4d3b;
+  --color-brand-strong: #173e2f;
+  --color-brand-soft: #e6f0eb;
+  --color-brand-tint: #f1f6f3;
+  --color-canvas: #f4f5f3;
+  --color-surface: #ffffff;
+  --color-border: #e1e4e0;
+  --color-border-strong: #c9cfcb;
+  --color-text: #16211c;
+  --color-text-muted: #5e6b64;
+  --color-text-faint: #8a948f;
+  --color-notice-bg: #fbf3e0;
+  --color-notice-text: #7a4f00;
+  --color-notice-border: #f0dfb3;
+  --color-warn: #c77700;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbeae8;
+  --color-success: #2e7d4f;
+  --color-on-brand: #ffffff;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-xs: 11px;
+  --text-sm: 12.5px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 26px;
+  --text-3xl: 34px;
+
+  --shadow-card: 0 1px 2px rgba(22, 33, 28, 0.06), 0 0 0 1px var(--color-border);
+  --tabbar-height: 60px;
+}
