@@ -111,12 +111,20 @@ _Avoid_: lease length, term
 ### Commute
 
 **Campus Reference Point**:
-The single Cal Poly location every Commute is measured to.
+The single Cal Poly location every Commute is measured to, for every Transport Mode: the Robert E. Kennedy Library (1 Grand Avenue, Building 35).
 _Avoid_: campus, school, Cal Poly (when a coordinate is meant)
 
 **Commute**:
-The distance in miles and the travel times by Transport Mode from a Listing's address to the Campus Reference Point.
+The route distance in miles for the student's Transport Mode and the travel times by every Transport Mode from a Listing's address to the Campus Reference Point, looked up once per Listing and kept with it. Bus times are for the next weekday morning departure.
 _Avoid_: distance, directions, route
+
+**Not Available**:
+A Commute time the tool could not compute for a Transport Mode (for example, no bus route). Distinct from Not Listed, which is about a Listing Fact the Source omitted. A Not Available time for the student's Transport Mode is a Watch-out.
+_Avoid_: unknown, N/A, missing
+
+**Commute Failure**:
+A Commute that could not be computed at all: the address could not be located, or the lookup failed and can be retried. The Scorecard shows the reason instead of a Commute, and the Commute category scores nothing.
+_Avoid_: error, geocoding error
 
 ### Sharing and deciding
 
