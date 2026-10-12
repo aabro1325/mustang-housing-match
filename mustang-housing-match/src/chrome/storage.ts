@@ -1,9 +1,6 @@
-// Thin wrappers over chrome.storage so the rest of the app can be tested with an in-memory substitute.
-export interface KeyValueStore {
-  get<T>(key: string): Promise<T | undefined>;
-  set<T>(key: string, value: T): Promise<void>;
-  remove(key: string): Promise<void>;
-}
+import type { KeyValueStore } from "@/core/storage";
+export type { KeyValueStore } from "@/core/storage";
+export { memoryStore } from "@/core/storage";
 
 export function chromeStore(area: "local" | "sync" | "session"): KeyValueStore {
   const a = chrome.storage[area];
@@ -18,14 +15,5 @@ export function chromeStore(area: "local" | "sync" | "session"): KeyValueStore {
     async remove(key: string) {
       await a.remove(key);
     },
-  };
-}
-
-export function memoryStore(): KeyValueStore {
-  const m = new Map<string, unknown>();
-  return {
-    async get<T>(key: string) { return m.get(key) as T | undefined; },
-    async set<T>(key: string, value: T) { m.set(key, value); },
-    async remove(key: string) { m.delete(key); },
   };
 }

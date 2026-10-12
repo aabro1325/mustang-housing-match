@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join a Mustang Housing Match list</title>
+<style>
+  :root { --brand:#1e4d3b; --canvas:#f4f5f3; --text:#16211c; --muted:#5e6b64; --border:#e1e4e0; }
+  body { margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--canvas); color:var(--text); }
+  main { max-width: 480px; margin: 48px auto; padding: 0 16px; }
+  .card { background:#fff; border-radius:16px; padding:24px; box-shadow: 0 1px 2px rgba(22,33,28,.06), 0 0 0 1px var(--border); }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { color: var(--muted); line-height: 1.5; }
+  ol { padding-left: 20px; line-height: 1.6; }
+  code, textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  textarea { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:12px; padding:12px; min-height: 72px; }
+  button { margin-top: 12px; width:100%; padding:12px 16px; border-radius:12px; border:0; background:var(--brand); color:#fff; font-weight:600; font-size:15px; cursor:pointer; }
+  .small { font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h1>You're invited to a shared housing list</h1>
+    <p>Mustang Housing Match is a Chrome side-panel extension. To join this list:</p>
+    <ol>
+      <li>Install the extension (unpacked, from your group's build) and click its toolbar icon.</li>
+      <li>Open the <strong>Roommates</strong> tab and choose <strong>Join with a link</strong>.</li>
+      <li>Paste the link below, enter your name, and you're in.</li>
+    </ol>
+    <textarea id="link" readonly aria-label="Invitation link"></textarea>
+    <button id="copy">Copy invitation link</button>
+    <p class="small">The link contains a private token. Share it only with your roommates. Independent student project; not affiliated with Cal Poly or any listing site.</p>
+  </div>
+</main>
+<script>
+  var ta = document.getElementById('link');
+  ta.value = location.href;
+  document.getElementById('copy').addEventListener('click', function () {
+    ta.select();
+    try { navigator.clipboard.writeText(ta.value); } catch (e) { document.execCommand('copy'); }
+    this.textContent = 'Copied';
+  });
+</script>
+</body>
+</html>
