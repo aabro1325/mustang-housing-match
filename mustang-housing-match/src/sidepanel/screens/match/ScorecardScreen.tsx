@@ -73,9 +73,11 @@ function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: Mo
   );
 }
 
-export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences }: {
+export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title }: {
   listing: Listing; result: FitScoreResult; prefs: Preferences; commute: CommuteState; save: SaveState;
   onSave: () => void; onEdit: () => void; onRetryCommute: () => void; onEditAddress: () => void; onAnother: () => void; onPreferences: () => void;
+  /** Saved tab detail: no save, edit, or navigation actions; the surrounding screen owns those. */
+  readOnly?: boolean; context?: string; title?: string;
 }) {
   const band = scoreBand(result.score);
   const c = commute.status === "done" ? commute.value : null;
@@ -89,7 +91,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
 
   return (
     <div class="stack">
-      <Header context="Your listing match" title={band.title} lede={`${listing.title} · ${SOURCE_LABEL[listing.source]}`} />
+      <Header context={context ?? "Your listing match"} title={title ?? band.title} lede={`${listing.title} · ${SOURCE_LABEL[listing.source]}`} />
 
       <Card tone="brand">
         <div class="scorecard__hero">
@@ -158,11 +160,11 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
           <Card><p class="muted">Looking up the commute from this address…</p></Card>
         ) : c?.kind === "address-not-found" ? (
           <Notice tone="danger" title="Address could not be located" role="alert">
-            Commute isn't scored until the address is fixed. <Button variant="link" onClick={onEditAddress}>Edit address</Button>
+            Commute isn't scored until the address is fixed. {!readOnly && <Button variant="link" onClick={onEditAddress}>Edit address</Button>}
           </Notice>
         ) : c?.kind === "transient-failure" ? (
           <Notice tone="warn" title="Commute lookup failed" role="alert">
-            {c.message} <Button variant="link" onClick={onRetryCommute}>Retry</Button>
+            {c.message} {!readOnly && <Button variant="link" onClick={onRetryCommute}>Retry</Button>}
           </Notice>
         ) : c ? (
           <Card>
@@ -200,6 +202,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
 
       <Notice tone="info">Estimates are labelled. Confirm prices, availability, and lease terms with the landlord before deciding.</Notice>
 
+      {readOnly ? null : (<>
       {save.status === "saved" && (
         <Notice tone="success" title={`Saved to ${save.listName}`} role="status">
           {save.createdDefault ? "We made a list for you. Rename it or invite roommates from the Roommates tab." : "Your roommates can see it on the Saved tab."}
@@ -216,6 +219,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
           <Button variant="link" onClick={onAnother}>Analyze another listing</Button>
         </div>
       </div>
+      </>)}
     </div>
   );
 }

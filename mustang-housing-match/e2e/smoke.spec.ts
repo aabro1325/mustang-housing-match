@@ -8,5 +8,5 @@ test("side panel opens with four tabs", async ({ context, extensionId }) => {
   await expect(page.getByRole("tab", { name: "Compare" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Roommates" })).toBeVisible();
   await page.getByRole("tab", { name: "Saved" }).click();
-  await expect(page.getByRole("heading", { name: /Saved/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "All your finds, one place" })).toBeVisible();
 });
