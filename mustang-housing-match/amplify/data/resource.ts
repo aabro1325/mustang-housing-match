@@ -6,7 +6,6 @@ import { a, defineData, type ClientSchema } from "@aws-amplify/backend";
  * No model CRUD is exposed. Every field allows guests: the identity pool identifies the caller; the resolvers decide.
  */
 const DS = "SharedListDataSource";
-const guest = (allow: { guest: () => unknown }) => [allow.guest()];
 const member = (entry: string) => [
   a.handler.custom({ dataSource: DS, entry: "./resolvers/assertMember.js" }),
   a.handler.custom({ dataSource: DS, entry }),
@@ -60,80 +59,80 @@ const schema = a.schema({
   myLists: a
     .query()
     .returns(a.ref("SharedList").array())
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(a.handler.custom({ dataSource: DS, entry: "./resolvers/myLists.js" })),
   getList: a
     .query()
     .arguments({ listId: a.string().required() })
     .returns(a.ref("SharedList"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/getList.js")),
   listSavedListings: a
     .query()
     .arguments({ listId: a.string().required() })
     .returns(a.ref("SavedListing").array())
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/listSavedListings.js")),
 
   createList: a
     .mutation()
     .arguments({ name: a.string().required(), inviteToken: a.string().required(), displayName: a.string().required() })
     .returns(a.ref("CreatedList"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(a.handler.custom({ dataSource: DS, entry: "./resolvers/createList.js" })),
   joinList: a
     .mutation()
     .arguments({ listId: a.string().required(), inviteToken: a.string().required(), displayName: a.string().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(a.handler.custom({ dataSource: DS, entry: "./resolvers/joinList.js" })),
   rotateInviteToken: a
     .mutation()
     .arguments({ listId: a.string().required(), newToken: a.string().required() })
     .returns(a.ref("CreatedList"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/rotateInviteToken.js")),
   removeMember: a
     .mutation()
     .arguments({ listId: a.string().required(), memberId: a.string().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/removeMember.js")),
   leaveList: a
     .mutation()
     .arguments({ listId: a.string().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/leaveList.js")),
   addSavedListing: a
     .mutation()
     .arguments({ listId: a.string().required(), listing: a.json().required(), commute: a.json(), landlordQuestions: a.string().array() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/addSavedListing.js")),
   updateSavedListing: a
     .mutation()
     .arguments({ listId: a.string().required(), savedListingId: a.string().required(), patch: a.json().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/updateSavedListing.js")),
   removeSavedListing: a
     .mutation()
     .arguments({ listId: a.string().required(), savedListingId: a.string().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/removeSavedListing.js")),
   addNote: a
     .mutation()
     .arguments({ listId: a.string().required(), savedListingId: a.string().required(), text: a.string().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/addNote.js")),
   setFitScore: a
     .mutation()
     .arguments({ listId: a.string().required(), savedListingId: a.string().required(), score: a.integer().required() })
     .returns(a.ref("ListChange"))
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(member("./resolvers/setFitScore.js")),
 
   /**
@@ -148,7 +147,7 @@ const schema = a.schema({
       a.ref("removeSavedListing"), a.ref("addNote"), a.ref("setFitScore"),
     ])
     .arguments({ listId: a.string().required() })
-    .authorization(guest)
+    .authorization((allow) => [allow.guest()])
     .handler(a.handler.custom({ dataSource: DS, entry: "./resolvers/onListChange.js" })),
 });
 

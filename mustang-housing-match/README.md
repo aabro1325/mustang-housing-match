@@ -24,6 +24,9 @@ What it does, in one pass:
 
 Chrome 116 or newer. Preferences stay in your Chrome profile; the shared list lives in the group's backend.
 
+Tip: when you type a listing in by hand or paste a post, check the **Rent basis** toggle on the Review screen. Rent
+is treated as per unit unless you switch it to per person.
+
 ## Develop
 
 ```

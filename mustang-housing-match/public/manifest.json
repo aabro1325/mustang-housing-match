@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mustang Housing Match",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "description": "Evaluate off-campus rental listings against your priorities and decide together with your roommates.",
   "minimum_chrome_version": "116",
   "permissions": ["sidePanel", "storage", "scripting", "activeTab"],

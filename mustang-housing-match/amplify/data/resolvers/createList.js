@@ -11,7 +11,6 @@ export function request(ctx) {
     operation: "TransactWriteItems",
     transactItems: [
       {
-        table: ctx.stash.tableName || undefined,
         operation: "PutItem",
         key: util.dynamodb.toMapValues({ pk: listKey(listId), sk: "META" }),
         attributeValues: util.dynamodb.toMapValues({

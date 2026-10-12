@@ -331,6 +331,10 @@ export class MatchController {
         listId = created.list.id;
         listName = created.list.name;
         createdDefault = true;
+        // Keep the Owner's invite token where the Roommates tab looks for it (same key as SharingController).
+        const tokens = (await this.services.local.get<Record<string, string>>("mhm.inviteTokens")) ?? {};
+        tokens[listId] = created.inviteToken;
+        await this.services.local.set("mhm.inviteTokens", tokens);
       }
       await this.services.local.set(KEYS.currentListId, listId);
       const questions = landlordQuestions(listing.facts, scorecard.breakdown);
