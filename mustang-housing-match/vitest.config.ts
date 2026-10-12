@@ -8,6 +8,9 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "node",
-    environmentMatchGlobs: [["src/sidepanel/**", "happy-dom"]],
+    projects: [
+      { extends: true, test: { name: "node", include: ["src/**/*.test.{ts,tsx}"], exclude: ["src/sidepanel/**"], environment: "node" } },
+      { extends: true, test: { name: "dom", include: ["src/sidepanel/**/*.test.{ts,tsx}"], environment: "happy-dom" } },
+    ],
   },
 });

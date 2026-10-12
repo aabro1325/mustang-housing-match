@@ -8,7 +8,7 @@ export async function activeTab(): Promise<ActiveTab | undefined> {
 
 export function onActiveTabChanged(cb: () => void): () => void {
   const onActivated = () => cb();
-  const onUpdated = (_id: number, info: chrome.tabs.TabChangeInfo) => { if (info.status === "complete" || info.url) cb(); };
+  const onUpdated = (_id: number, info: chrome.tabs.OnUpdatedInfo) => { if (info.status === "complete" || info.url) cb(); };
   chrome.tabs.onActivated.addListener(onActivated);
   chrome.tabs.onUpdated.addListener(onUpdated);
   return () => {
