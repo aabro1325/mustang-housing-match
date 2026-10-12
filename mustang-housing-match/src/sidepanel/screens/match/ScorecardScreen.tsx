@@ -73,11 +73,13 @@ function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: Mo
   );
 }
 
-export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title }: {
+export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title, hideQuestions }: {
   listing: Listing; result: FitScoreResult; prefs: Preferences; commute: CommuteState; save: SaveState;
   onSave: () => void; onEdit: () => void; onRetryCommute: () => void; onEditAddress: () => void; onAnother: () => void; onPreferences: () => void;
   /** Saved tab detail: no save, edit, or navigation actions; the surrounding screen owns those. */
   readOnly?: boolean; context?: string; title?: string;
+  /** The Saved Listing detail shows its own editable question list above the Scorecard. */
+  hideQuestions?: boolean;
 }) {
   const band = scoreBand(result.score);
   const c = commute.status === "done" ? commute.value : null;
@@ -192,7 +194,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
         </Section>
       )}
 
-      {questions.length > 0 && (
+      {questions.length > 0 && !hideQuestions && (
         <Section title="Ask the landlord" aside={`${questions.length} unknown${questions.length === 1 ? "" : "s"}`} id="questions">
           <Card>
             <ol class="questions">{questions.map((q) => <li key={q}>{q}</li>)}</ol>

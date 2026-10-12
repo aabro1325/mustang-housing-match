@@ -1,9 +1,9 @@
 // Shared List state for the Saved and Roommates tabs. One controller owns the provider calls and the realtime
 // subscription; screens stay declarative. Per-Member Fit Scores live on each Saved Listing (fitScores) so Build 7's
 // Group Fit reads them straight from state.
-import type { Preferences, SavedListing } from "@/core/domain";
+import type { Preferences, SavedListing, Status } from "@/core/domain";
 import { fitScore } from "@/core/scoring";
-import { SharingError, type SharedList } from "@/core/sharing/provider";
+import { SharingError, type SavedListingPatch, type SharedList } from "@/core/sharing/provider";
 import { parseInvite } from "@/core/sharing/invite";
 import { KEYS, type Services } from "../services";
 import { createStore, type Store } from "./store";
@@ -275,6 +275,58 @@ export class SharingController {
     } catch (e) {
       this.patch({ notice: { tone: "danger", text: message(e) } });
     }
+  }
+
+  /** Writes one patch through the provider and reloads the list so every screen sees the provider's truth. */
+  private async patchSaved(savedListingId: string, patch: SavedListingPatch): Promise<void> {
+    const listId = this.state.currentListId;
+    if (!listId) return;
+    try {
+      const updated = await this.services.sharing.updateSavedListing(listId, savedListingId, patch);
+      // Optimistic: swap the returned row in so the UI answers immediately; the reload reconciles exclusivity rules.
+      this.patch({ saved: this.state.saved.map((s) => (s.id === updated.id ? updated : s)) });
+      await this.reloadSaved(listId);
+    } catch (e) {
+      this.patch({ notice: { tone: "danger", text: message(e) } });
+    }
+  }
+
+  setStatus(savedListingId: string, status: Status): Promise<void> {
+    return this.patchSaved(savedListingId, { status });
+  }
+
+  /** `tourAt` is an ISO string or null to clear. */
+  setTour(savedListingId: string, tourAt: string | null): Promise<void> {
+    return this.patchSaved(savedListingId, { tourAt });
+  }
+
+  toggleFinalist(savedListingId: string): Promise<void> {
+    const current = this.state.saved.find((s) => s.id === savedListingId);
+    if (!current) return Promise.resolve();
+    return this.patchSaved(savedListingId, { finalist: !current.finalist });
+  }
+
+  setQuestions(savedListingId: string, landlordQuestions: string[]): Promise<void> {
+    return this.patchSaved(savedListingId, { landlordQuestions: landlordQuestions.map((q) => q.trim()).filter(Boolean) });
+  }
+
+  async addNote(savedListingId: string, text: string): Promise<void> {
+    const listId = this.state.currentListId;
+    const t = text.trim();
+    if (!listId || !t) return;
+    try {
+      await this.services.sharing.addNote(listId, savedListingId, t);
+      await this.reloadSaved(listId);
+    } catch (e) {
+      this.patch({ notice: { tone: "danger", text: message(e) } });
+    }
+  }
+
+  /** "Save as Group's First Choice": Status Selected, exclusive across the list (the provider demotes the previous one). */
+  async selectAsGroupChoice(savedListingId: string): Promise<void> {
+    await this.patchSaved(savedListingId, { status: "selected" });
+    const chosen = this.state.saved.find((s) => s.id === savedListingId);
+    if (chosen) this.patch({ notice: { tone: "success", text: `${chosen.listing.title} is the group's first choice.` } });
   }
 
   openDetail(savedListingId: string) {

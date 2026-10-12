@@ -42,8 +42,8 @@ export function App({ services: injected }: { services?: Services } = {}) {
           <>
             {tab === "match" && <MatchTab services={services} controller={controllers.match} />}
             {tab === "saved" && <SavedTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoRoommates={() => setTab("roommates")} />}
-            {tab === "compare" && <CompareTab />}
-            {tab === "roommates" && <RoommatesTab controller={controllers.sharing} onGoMatch={() => setTab("match")} />}
+            {tab === "compare" && <CompareTab controller={controllers.sharing} onNavigate={setTab} />}
+            {tab === "roommates" && <RoommatesTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoCompare={() => setTab("compare")} />}
           </>
         )}
       </main>

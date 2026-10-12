@@ -27,7 +27,23 @@ export function SavedTab({ controller, onGoMatch, onGoRoommates }: { controller:
 
   if (s.detailId) {
     const open = s.saved.find((x) => x.id === s.detailId);
-    if (open) return <SavedDetail saved={open} prefs={s.prefs} onBack={() => controller.closeDetail()} />;
+    if (open) {
+      const id = open.id;
+      return (
+        <SavedDetail
+          saved={open}
+          prefs={s.prefs}
+          onBack={() => controller.closeDetail()}
+          actions={{
+            onStatus: (st) => void controller.setStatus(id, st),
+            onTour: (iso) => void controller.setTour(id, iso),
+            onToggleFinalist: () => void controller.toggleFinalist(id),
+            onAddNote: (text) => void controller.addNote(id, text),
+            onQuestions: (next) => void controller.setQuestions(id, next),
+          }}
+        />
+      );
+    }
   }
 
   const sources = new Set(s.saved.map((x) => SOURCE_LABEL[x.listing.source]));

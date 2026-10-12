@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Header } from "../components/Header";
@@ -8,15 +8,14 @@ import { useStore } from "../state/store";
 import type { SharingController } from "../state/sharing";
 import { ListSetup } from "./roommates/ListSetup";
 import { InviteCard } from "./roommates/InviteCard";
-import { savedView } from "./saved/savedView";
+import { GroupFit } from "./roommates/GroupFit";
 
-export function RoommatesTab({ controller, onGoMatch }: { controller: SharingController; onGoMatch: () => void }) {
+export function RoommatesTab({ controller, onGoMatch, onGoCompare }: { controller: SharingController; onGoMatch: () => void; onGoCompare: () => void }) {
   const s = useStore(controller.store);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
   useEffect(() => { void controller.init(); }, [controller]);
   const busy = s.status.kind === "loading";
-  const views = useMemo(() => s.saved.map((sl) => savedView(sl, s.prefs, s.identityId)), [s.saved, s.prefs, s.identityId]);
 
   if (!s.loaded && s.status.kind !== "error") return <div class="empty">Loading…</div>;
 
@@ -72,35 +71,15 @@ export function RoommatesTab({ controller, onGoMatch }: { controller: SharingCon
             </Card>
           </Section>
 
-          <Section title="Group fit" aside={views.length ? `${views.length} saved` : undefined} id="groupfit">
-            <Card>
-              {views.length === 0 ? (
-                <p class="muted small">Save listings from the Match tab and every member's score shows up here. <Button variant="link" onClick={onGoMatch}>Go to Match</Button></p>
-              ) : (
-                <ul class="groupfit">
-                  {views.map((v) => {
-                    const scores = list.members.map((m) => ({ m, score: m.id === me && v.score !== null ? v.score : v.saved.fitScores[m.id]?.score ?? null }));
-                    const known = scores.filter((x) => x.score !== null) as { m: typeof list.members[number]; score: number }[];
-                    const mean = known.length ? Math.round(known.reduce((a, b) => a + b.score, 0) / known.length) : null;
-                    return (
-                      <li class="groupfit__row" key={v.saved.id}>
-                        <div class="groupfit__head">
-                          <span class="groupfit__title">{v.saved.listing.title}</span>
-                          <span class="groupfit__mean">{mean === null ? "—" : mean}<span class="muted small"> group</span></span>
-                        </div>
-                        <div class="groupfit__members">
-                          {scores.map(({ m, score }) => (
-                            <span class="groupfit__member" key={m.id}>{m.displayName.split(" ")[0]} <strong>{score === null ? "–" : score}</strong></span>
-                          ))}
-                        </div>
-                        <div class="fine">{known.length} of {list.members.length} {list.members.length === 1 ? "roommate" : "roommates"} scored</div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Card>
-          </Section>
+          <GroupFit
+            saved={s.saved}
+            members={list.members}
+            me={me}
+            prefs={s.prefs}
+            onChoose={(id) => void controller.selectAsGroupChoice(id)}
+            onCompare={onGoCompare}
+            onGoMatch={onGoMatch}
+          />
 
           {!isOwner && (
             confirmLeave ? (
