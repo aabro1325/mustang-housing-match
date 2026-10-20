@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Mustang Housing Match",
+  "version": "0.1.0",
+  "version_name": "0.1.0-alpha",
+  "description": "Check an off-campus listing against your budget, lease, and amenities, and see a 0–100 fit score.",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.zillow.com/*",
+    "https://*.craigslist.org/*",
+    "https://*.apartments.com/*",
+    "https://api.openrouteservice.org/*",
+    "https://transit.land/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "action": {
+    "default_title": "Open Mustang Housing Match"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

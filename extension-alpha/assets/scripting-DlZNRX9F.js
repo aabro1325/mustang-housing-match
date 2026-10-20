@@ -1,0 +1,1 @@
+async function e(e){let t=(await chrome.scripting.executeScript({target:{tabId:e},files:[`capture.js`]}))[0];if(!t)throw Error(`Capture script returned nothing`);return t.result}async function t(e){return(await chrome.scripting.executeScript({target:{tabId:e},func:()=>globalThis.getSelection()?.toString()??``}))[0]?.result??``}export{e as runCaptureScript,t as selectedText};

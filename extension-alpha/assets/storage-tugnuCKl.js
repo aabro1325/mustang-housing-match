@@ -1,0 +1,1 @@
+function e(e){let t=new Map(Object.entries(e??{}));return{async get(e){return t.get(e)},async set(e,n){t.set(e,structuredClone(n))},async remove(e){t.delete(e)}}}function t(e){let t=chrome.storage[e];return{async get(e){return(await t.get(e))[e]},async set(e,n){await t.set({[e]:n})},async remove(e){await t.remove(e)}}}export{t as chromeStore,e as memoryStore};
