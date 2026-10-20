@@ -61,6 +61,33 @@ describe("ScorecardScreen", () => {
     cleanup();
   });
 
+  it("hides commute, cost breakdown, landlord questions, and save in alpha", () => {
+    const result = fitScore(FOOTHILL.facts, { kind: "address-not-found", referencePointVersion: 1 }, MAYA, "alpha");
+    render(
+      <ScorecardScreen
+        listing={FOOTHILL} result={result} prefs={MAYA} scope="alpha"
+        commute={{ status: "done", value: { kind: "address-not-found", referencePointVersion: 1 } }}
+        save={{ status: "idle" }}
+        onSave={noop} onEdit={noop} onRetryCommute={noop} onEditAddress={noop} onAnother={noop} onPreferences={noop}
+      />,
+    );
+    expect(screen.getByRole("img", { name: `Fit Score ${result.score} out of 100` })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Why this score?" })).toBeTruthy();
+    expect(screen.getByText(/Cost ·/)).toBeTruthy();
+    expect(screen.getByText(/Lease ·/)).toBeTruthy();
+    expect(screen.getByText(/Amenities ·/)).toBeTruthy();
+    expect(screen.queryByText(/Commute ·/)).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Commute to Cal Poly" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Estimated monthly total" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Ask the landlord" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save listing" })).toBeNull();
+    expect(screen.queryByText(/Address could not be located/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Edit details" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Change preferences" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Benefits and watch-outs" })).toBeTruthy();
+    cleanup();
+  });
+
   it("bands the headline by score", () => {
     expect(scoreBand(85).title).toBe("A strong fit");
     expect(scoreBand(70).title).toBe("A solid fit, with tradeoffs");

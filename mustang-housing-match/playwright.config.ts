@@ -4,6 +4,7 @@ import { defineConfig } from "@playwright/test";
 // Chromium context. Fixture listing pages are served from e2e/fixtures/ on localhost.
 export default defineConfig({
   testDir: "e2e",
+  testIgnore: ["**/alpha.spec.ts"],
   timeout: 60_000,
   retries: 0,
   workers: 1,

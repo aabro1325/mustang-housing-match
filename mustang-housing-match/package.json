@@ -6,6 +6,8 @@
   "scripts": {
     "test": "vitest run",
     "build": "vite build && vite build -c vite.background.config.ts && vite build -c vite.capture.config.ts",
+    "build:alpha": "vite build --mode alpha && vite build -c vite.background.config.ts --mode alpha && vite build -c vite.capture.config.ts --mode alpha && node scripts/stamp-alpha-manifest.mjs",
+    "e2e:alpha": "vite build --mode alpha --outDir dist-alpha && vite build -c vite.background.config.ts --mode alpha --outDir dist-alpha && vite build -c vite.capture.config.ts --mode alpha --outDir dist-alpha && node scripts/stamp-alpha-manifest.mjs dist-alpha/manifest.json && E2E_DIST=../dist-alpha playwright test -c playwright.alpha.config.ts",
     "watch": "vite build --watch",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

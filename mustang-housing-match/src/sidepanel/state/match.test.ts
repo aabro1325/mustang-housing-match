@@ -175,6 +175,25 @@ describe("MatchController", () => {
     expect(c.state.listing!.id).toMatch(/#plan=b$/);
   });
 
+  it("in alpha, scores without a commute lookup and ignores a missing commute", async () => {
+    const lookup = vi.fn(fixtureCommuteProvider().lookup);
+    const c = new MatchController(fakeServices({}, { id: "spy", lookup }), undefined, "alpha");
+    await c.init();
+    await c.analyze();
+    await c.confirmReview();
+    expect(lookup).not.toHaveBeenCalled();
+    expect(c.state.commute.status).toBe("idle");
+    expect(c.state.scorecard!.categories.commute.max).toBe(0);
+    expect(c.state.scorecard!.score).toBeGreaterThan(0);
+    await c.savePreferences(MAYA);
+    const before = c.state.scorecard!.score;
+    await c.savePreferences({ ...MAYA, transportMode: "walk", maxCommuteMinutes: 5 });
+    expect(c.state.scorecard!.score).toBe(before);
+    await c.savePreferences({ ...MAYA, budget: 400 });
+    expect(c.state.scorecard!.score).toBeLessThan(before);
+    expect(c.state.scorecard!.watchOuts.map((w) => w.text).join(" ")).not.toMatch(/commute/i);
+  });
+
   it("ignores a stale lookup when the student has moved on", async () => {
     const resolvers: ((c: Commute) => void)[] = [];
     const slow: CommuteProvider = { id: "slow", lookup: () => new Promise<Commute>((r) => { resolvers.push(r); }) };

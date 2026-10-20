@@ -4,6 +4,7 @@ import {
   DEFAULT_PREFERENCES, emptyFacts, listed, corrected, type Commute, type Fact, type FloorPlan, type Listing, type ListingFacts,
   type Preferences, type RentBasis, type SourceId,
 } from "@/core/domain";
+import { releaseScope, type ReleaseScope } from "@/core/release";
 import { fitScore, type FitScoreResult } from "@/core/scoring";
 import { landlordQuestions } from "@/core/cost";
 import { listingIdentity } from "@/core/address";
@@ -93,7 +94,7 @@ export class MatchController {
   readonly store: Store<MatchState>;
   private stopTabs: (() => void) | undefined;
 
-  constructor(private readonly services: Services, store?: Store<MatchState>) {
+  constructor(private readonly services: Services, store?: Store<MatchState>, private readonly scope: ReleaseScope = releaseScope()) {
     this.store = store ?? createStore(initialMatchState);
   }
 
@@ -272,7 +273,8 @@ export class MatchController {
     };
     this.patch({ listing, screen: "scorecard", commute: { status: "idle" }, save: { status: "idle" } });
     this.recompute();
-    await this.lookupCommute();
+    // Alpha does not show or score Commute, so it does not look one up.
+    if (this.scope !== "alpha") await this.lookupCommute();
   }
 
   async lookupCommute(): Promise<void> {
@@ -309,7 +311,7 @@ export class MatchController {
       return;
     }
     const c = commute.status === "done" ? commute.value : null;
-    this.patch({ scorecard: fitScore(listing.facts, c, prefs) });
+    this.patch({ scorecard: fitScore(listing.facts, c, prefs, this.scope) });
   }
 
   async saveListing(): Promise<void> {

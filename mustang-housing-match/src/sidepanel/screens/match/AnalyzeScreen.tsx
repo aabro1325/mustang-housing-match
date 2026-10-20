@@ -1,3 +1,4 @@
+import { isAlphaScope } from "@/core/release";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Field } from "../../components/Field";
@@ -18,9 +19,10 @@ export function AnalyzeScreen({ state, onAnalyze, onAnalyzeText, onManual, onTex
 }) {
   const { page, capture } = state;
   const busy = capture.status === "capturing";
+  const alpha = isAlphaScope();
   return (
     <div class="stack">
-      <Header context="Analyze a listing" title={page.status === "supported" ? "Ready when you are" : "Find a listing to analyze"} lede={page.status === "supported" ? "We read the listing on this page and show you how it fits before you save anything." : undefined} />
+      <Header context="Analyze a listing" title={page.status === "supported" ? "Ready when you are" : "Find a listing to analyze"} lede={page.status === "supported" ? (alpha ? "We read the listing on this page and score how it fits your preferences." : "We read the listing on this page and show you how it fits before you save anything.") : undefined} />
 
       {page.status === "supported" && (
         <Card>

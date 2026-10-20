@@ -1,12 +1,14 @@
 // Fit Score rubric as fixed by issue #11. Pure functions of (Listing Facts, Commute, Preferences): no clock, no randomness.
 import { costBreakdown, estimatedMonthlyTotal, unitRent, type CostBreakdown } from "./cost";
 import { CATEGORIES, type AmenityId, type Category, type Commute, type ListingFacts, type Preferences, type Priority, type TransportMode } from "./domain";
+import { scoredCategories, type ReleaseScope } from "./release";
 
 export const PRIORITY_WEIGHT: Record<Priority, number> = { high: 3, med: 2, low: 1 };
 
-/** 100 × weight / sum, with largest-remainder rounding so the four maxima sum to exactly 100 (ties go in category order). */
-export function categoryMaxima(priorities: Record<Category, Priority>): Record<Category, number> {
-  const weights = CATEGORIES.map((c) => PRIORITY_WEIGHT[priorities[c]]);
+/** 100 × weight / sum, with largest-remainder rounding so the scored maxima sum to exactly 100 (ties go in category order). Alpha omits Commute and re-normalizes Cost, Lease, and Amenities. */
+export function categoryMaxima(priorities: Record<Category, Priority>, scope: ReleaseScope = "full"): Record<Category, number> {
+  const active = scoredCategories(scope);
+  const weights = active.map((c) => PRIORITY_WEIGHT[priorities[c]]);
   const sum = weights.reduce((a, b) => a + b, 0);
   const raw = weights.map((w) => (100 * w) / sum);
   const floors = raw.map(Math.floor);
@@ -19,7 +21,11 @@ export function categoryMaxima(priorities: Record<Category, Priority>): Record<C
     floors[i]! += 1;
     remainder -= 1;
   }
-  return { cost: floors[0]!, commute: floors[1]!, lease: floors[2]!, amenities: floors[3]! };
+  const result: Record<Category, number> = { cost: 0, commute: 0, lease: 0, amenities: 0 };
+  active.forEach((c, i) => {
+    result[c] = floors[i]!;
+  });
+  return result;
 }
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
@@ -116,10 +122,10 @@ function joinWords(words: string[], conj: string): string {
 
 export const INSIGHT_LIMIT = 3;
 
-export function fitScore(facts: ListingFacts, commute: Commute | null, prefs: Preferences): FitScoreResult {
+export function fitScore(facts: ListingFacts, commute: Commute | null, prefs: Preferences, scope: ReleaseScope = "full"): FitScoreResult {
   const breakdown = costBreakdown(facts, prefs);
   const total = estimatedMonthlyTotal(breakdown);
-  const maxima = categoryMaxima(prefs.priorities);
+  const maxima = categoryMaxima(prefs.priorities, scope);
   const fractions = categoryFractions(facts, commute, prefs, total);
 
   const categories = {} as Record<Category, CategoryResult>;
@@ -145,21 +151,23 @@ export function fitScore(facts: ListingFacts, commute: Commute | null, prefs: Pr
     }
   }
 
-  // Commute, including the failure rules from issue #9
-  const mode = prefs.transportMode;
-  const minutes = preferredMinutes(commute, mode);
-  if (!commute) {
-    // No lookup yet: no insight.
-  } else if (commute.kind === "address-not-found") {
-    watchOuts.push({ category: "commute-failure", text: "Address could not be located; Commute not scored", points: lost("commute") });
-  } else if (commute.kind === "transient-failure") {
-    watchOuts.push({ category: "commute-failure", text: "Commute lookup failed; retry", points: lost("commute") });
-  } else if (minutes === null) {
-    watchOuts.push({ category: "commute-failure", text: `No ${MODE_NOUN[mode]} route found for a weekday 8 AM departure`, points: lost("commute") });
-  } else if (fractions.commute >= 0.8) {
-    benefits.push({ category: "commute", text: `${MODE_LABEL[mode]} commute is ${Math.round(minutes)} min, within your ${prefs.maxCommuteMinutes} min limit`, points: categories.commute.points });
-  } else if (fractions.commute <= 0.5) {
-    watchOuts.push({ category: "commute", text: `${MODE_LABEL[mode]} commute is ${Math.round(minutes)} min against your ${prefs.maxCommuteMinutes} min limit`, points: lost("commute") });
+  // Commute, including the failure rules from issue #9. Alpha does not score or explain Commute.
+  if (scope !== "alpha") {
+    const mode = prefs.transportMode;
+    const minutes = preferredMinutes(commute, mode);
+    if (!commute) {
+      // No lookup yet: no insight.
+    } else if (commute.kind === "address-not-found") {
+      watchOuts.push({ category: "commute-failure", text: "Address could not be located; Commute not scored", points: lost("commute") });
+    } else if (commute.kind === "transient-failure") {
+      watchOuts.push({ category: "commute-failure", text: "Commute lookup failed; retry", points: lost("commute") });
+    } else if (minutes === null) {
+      watchOuts.push({ category: "commute-failure", text: `No ${MODE_NOUN[mode]} route found for a weekday 8 AM departure`, points: lost("commute") });
+    } else if (fractions.commute >= 0.8) {
+      benefits.push({ category: "commute", text: `${MODE_LABEL[mode]} commute is ${Math.round(minutes)} min, within your ${prefs.maxCommuteMinutes} min limit`, points: categories.commute.points });
+    } else if (fractions.commute <= 0.5) {
+      watchOuts.push({ category: "commute", text: `${MODE_LABEL[mode]} commute is ${Math.round(minutes)} min against your ${prefs.maxCommuteMinutes} min limit`, points: lost("commute") });
+    }
   }
 
   // Lease
@@ -184,10 +192,12 @@ export function fitScore(facts: ListingFacts, commute: Commute | null, prefs: Pr
     }
   }
 
-  // Deposit over 1.5× the monthly unit rent
-  const unit = unitRent(facts);
-  if (facts.deposit.value !== null && unit !== null && facts.deposit.value > 1.5 * unit) {
-    watchOuts.push({ category: "deposit", text: `Deposit of ${money(facts.deposit.value)} is over 1.5× the monthly rent; California caps deposits at one month`, points: 5 });
+  // Deposit over 1.5× the monthly unit rent. Alpha hides the fees section, so this watch-out stays out of that build.
+  if (scope !== "alpha") {
+    const unit = unitRent(facts);
+    if (facts.deposit.value !== null && unit !== null && facts.deposit.value > 1.5 * unit) {
+      watchOuts.push({ category: "deposit", text: `Deposit of ${money(facts.deposit.value)} is over 1.5× the monthly rent; California caps deposits at one month`, points: 5 });
+    }
   }
 
   const byPoints = (a: Insight, b: Insight) => b.points - a.points;

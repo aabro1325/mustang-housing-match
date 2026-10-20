@@ -1,4 +1,5 @@
 import { AMENITIES, corrected, notListed, type AmenityId, type Fact, type LeaseType, type ListingFacts, type RentBasis } from "@/core/domain";
+import { releaseScope, type ReleaseScope } from "@/core/release";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ChoiceGroup } from "../../components/ChoiceGroup";
@@ -39,7 +40,7 @@ function FactField({ label, fact, onChange, inputMode = "decimal", prefix, place
   );
 }
 
-export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, onConfirm, onBack }: {
+export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, onConfirm, onBack, scope = releaseScope() }: {
   review: ReviewDraft;
   onEdit: <K extends keyof ListingFacts>(key: K, value: ListingFacts[K]) => void;
   onAmenity: (id: AmenityId, value: boolean | null) => void;
@@ -47,13 +48,16 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
   onPlan: (id: string) => void;
   onConfirm: () => void;
   onBack: () => void;
+  scope?: ReleaseScope;
 }) {
+  const alpha = scope === "alpha";
   const f = review.facts;
   const manual = review.mode === "manual";
   const addressMissing = !f.address.value?.trim();
   const rentMissing = f.rent.value === null;
   const canConfirm = !(manual && (addressMissing || rentMissing));
-  const unlisted = (["rent", "bedrooms", "bathrooms", "leaseType", "deposit"] as const).filter((k) => f[k].value === null).length
+  const factKeys = alpha ? (["rent", "bedrooms", "bathrooms", "leaseType"] as const) : (["rent", "bedrooms", "bathrooms", "leaseType", "deposit"] as const);
+  const unlisted = factKeys.filter((k) => f[k].value === null).length
     + AMENITIES.filter((a) => f.amenities[a].value === null).length;
   const num = (key: NumberKey) => (fact: Fact<number>) => onEdit(key, fact);
 
@@ -62,7 +66,9 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
       <Header
         context={manual ? "Add a listing" : "Listing review"}
         title={manual ? "Tell us about the place" : "Here's what we found"}
-        lede={manual ? "Address and rent are required. Anything you leave blank stays Not listed and becomes a question for the landlord." : "Check the details before matching this listing to your preferences. Edit anything that's off; your corrections are kept."}
+        lede={manual
+          ? (alpha ? "Address and rent are required. Anything you leave blank stays Not listed." : "Address and rent are required. Anything you leave blank stays Not listed and becomes a question for the landlord.")
+          : "Check the details before matching this listing to your preferences. Edit anything that's off; your corrections are kept."}
       />
 
       {!manual && (
@@ -97,7 +103,7 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
               <input id="f-address" value={f.address.value ?? ""} placeholder="870 Foothill Blvd, San Luis Obispo" required={manual}
                 onChange={(e) => { const v = (e.currentTarget as HTMLInputElement).value.trim(); onEdit("address", v ? (v === f.address.value ? f.address : corrected(v)) : notListed()); }} />
             </div>
-            {manual && addressMissing && <div class="field__hint">Required: the commute is measured from here.</div>}
+            {manual && addressMissing && <div class="field__hint">{alpha ? "Required." : "Required: the commute is measured from here."}</div>}
           </div>
 
           <FactField id="f-rent" label="Monthly rent" fact={f.rent} onChange={num("rent")} prefix="$" placeholder="1250" />
@@ -143,7 +149,7 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
         </Card>
       </Section>
 
-      <Section title="Fees and deposit" aside="Per unit, as listed" id="fees">
+      {!alpha && <Section title="Fees and deposit" aside="Per unit, as listed" id="fees">
         <Card>
           <div class="factgrid">
             <FactField id="f-deposit" label="Deposit" fact={f.deposit} onChange={num("deposit")} prefix="$" />
@@ -152,11 +158,13 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
             <FactField id="f-otherfees" label="Other fees / month" fact={f.otherMonthlyFees} onChange={num("otherMonthlyFees")} prefix="$" />
           </div>
         </Card>
-      </Section>
+      </Section>}
 
       {unlisted > 0 && (
         <Notice tone="warn" title="Missing details stay visible">
-          {unlisted} {unlisted === 1 ? "detail wasn't" : "details weren't"} listed. We'll label estimates and unknowns instead of treating them as confirmed, and suggest questions for the landlord.
+          {unlisted} {unlisted === 1 ? "detail wasn't" : "details weren't"} listed. {alpha
+            ? "Anything missing stays labelled Not listed. We don't guess."
+            : "We'll label estimates and unknowns instead of treating them as confirmed, and suggest questions for the landlord."}
         </Notice>
       )}
       {review.warnings.length > 0 && <p class="fine">{review.warnings.join(" ")}</p>}

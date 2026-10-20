@@ -160,6 +160,42 @@ describe("fitScore", () => {
     expect(texts).toContain("Deposit of $5,000 is over 1.5× the monthly rent; California caps deposits at one month");
   });
 
+  it("re-normalizes without Commute in alpha so a missing commute does not lower the score", () => {
+    expect(categoryMaxima(MAYA.priorities, "alpha")).toEqual({ cost: 50, commute: 0, lease: 33, amenities: 17 });
+    const levels = ["low", "med", "high"] as const;
+    for (const c of levels) for (const l of levels) for (const a of levels) {
+      const r = categoryMaxima({ cost: c, commute: "high", lease: l, amenities: a }, "alpha");
+      expect(r.commute).toBe(0);
+      expect(r.cost + r.lease + r.amenities).toBe(100);
+    }
+
+    const withCommute = fitScore(FOOTHILL.facts, FOOTHILL_COMMUTE, MAYA, "alpha");
+    const missing = fitScore(FOOTHILL.facts, { kind: "address-not-found", referencePointVersion: 1 }, MAYA, "alpha");
+    expect(withCommute.score).toBe(missing.score);
+    expect(withCommute.score).toBe(71);
+    expect(missing.categories.commute).toMatchObject({ points: 0, max: 0 });
+    expect(missing.benefits.map((b) => b.category)).not.toContain("commute");
+    expect(missing.watchOuts.map((w) => w.category)).not.toContain("commute-failure");
+    expect(missing.watchOuts.map((w) => w.text).join(" ")).not.toMatch(/commute/i);
+
+    const fullMissing = fitScore(FOOTHILL.facts, { kind: "address-not-found", referencePointVersion: 1 }, MAYA);
+    expect(fullMissing.score).toBeLessThan(fitScore(FOOTHILL.facts, FOOTHILL_COMMUTE, MAYA).score);
+    expect(missing.score).toBeGreaterThan(fullMissing.score);
+
+    const cheaper = fitScore(FOOTHILL.facts, null, { ...MAYA, budget: 2000 }, "alpha");
+    const tighter = fitScore(FOOTHILL.facts, null, { ...MAYA, budget: 500 }, "alpha");
+    expect(cheaper.score).toBeGreaterThan(tighter.score);
+
+    const deposit = emptyFacts();
+    deposit.rent = listed(3000);
+    deposit.bedrooms = listed(3);
+    deposit.bathrooms = listed(2);
+    deposit.deposit = listed(5000);
+    const alphaDeposit = fitScore(deposit, null, MAYA, "alpha");
+    expect(alphaDeposit.watchOuts.map((w) => w.category)).not.toContain("deposit");
+    expect(alphaDeposit.watchOuts.map((w) => w.text)).toContain("Lease length not listed; confirm the term before applying");
+  });
+
   it("gives no insight when there is no Commute yet or no budget", () => {
     const r = fitScore(FOOTHILL.facts, null, { ...MAYA, budget: null });
     expect(r.categories.cost.fraction).toBe(0.5);

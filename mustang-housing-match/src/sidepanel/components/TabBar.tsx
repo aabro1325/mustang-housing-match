@@ -1,3 +1,5 @@
+import type { ReleaseScope } from "@/core/release";
+
 export type TabId = "match" | "saved" | "compare" | "roommates";
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
@@ -6,6 +8,11 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "compare", label: "Compare", icon: "M4 4h6v16H4zM14 4h6v16h-6z" },
   { id: "roommates", label: "Roommates", icon: "M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20a6 6 0 0 1 12 0M12 20a6 6 0 0 1 10 0" },
 ];
+
+/** Alpha keeps a single Match flow, so the tab bar is not shown. */
+export function visibleTabs(scope: ReleaseScope = "full"): { id: TabId; label: string; icon: string }[] {
+  return scope === "alpha" ? TABS.filter((t) => t.id === "match") : TABS;
+}
 
 export function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
   return (
