@@ -3,6 +3,8 @@ dist/
 .env
 .env.local
 .env.*.local
+*.swp
+.*.swp
 amplify_outputs.json
 .amplify/
 playwright-report/
