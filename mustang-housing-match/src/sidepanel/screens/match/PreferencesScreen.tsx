@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
-import { AMENITIES, CATEGORIES, type AmenityId, type Category, type LeaseType, type Preferences, type Priority, type RoomType, type TransportMode } from "@/core/domain";
+import { AMENITIES, type AmenityId, type Category, type LeaseType, type Preferences, type Priority, type RoomType, type TransportMode } from "@/core/domain";
+import { releaseScope, scoredCategories, type ReleaseScope } from "@/core/release";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { Checkbox } from "../../components/Checkbox";
@@ -13,9 +14,11 @@ const AMENITY_TEXT: Record<AmenityId, string> = {
 };
 const CATEGORY_TEXT: Record<Category, string> = { cost: "Cost", commute: "Commute", lease: "Lease", amenities: "Amenities" };
 
-export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBack }: {
+export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBack, scope = releaseScope() }: {
   initial: Preferences; onSave: (p: Preferences) => void; onBack: () => void; onPreview?: (p: Preferences) => void; canGoBack: boolean;
+  scope?: ReleaseScope;
 }) {
+  const alpha = scope === "alpha";
   const [p, setP] = useState<Preferences>(initial);
   const [budgetText, setBudgetText] = useState(initial.budget === null ? "" : String(initial.budget));
   const [error, setError] = useState<string | null>(null);
@@ -34,18 +37,18 @@ export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBac
       setError("Enter a monthly amount, or leave it blank.");
       return;
     }
-    if (!Number.isFinite(p.maxCommuteMinutes) || p.maxCommuteMinutes <= 0) {
+    if (!alpha && (!Number.isFinite(p.maxCommuteMinutes) || p.maxCommuteMinutes <= 0)) {
       setError("Set a maximum commute in minutes.");
       return;
     }
-    onSave({ ...p, budget });
+    onSave({ ...p, budget, maxCommuteMinutes: p.maxCommuteMinutes > 0 ? p.maxCommuteMinutes : initial.maxCommuteMinutes });
   };
 
   return (
     <form class="stack" onSubmit={submit} aria-label="Preferences">
       <Header context="Your preferences" title="What feels like home?" lede="Your preferences shape the match. Monthly amounts are per person, not per property." />
 
-      <Field label="Maximum monthly budget" id="budget" hint="Includes estimated rent, utilities, internet, and parking." trailing="$ / person" error={error && error.includes("amount") ? error : null}>
+      <Field label="Maximum monthly budget" id="budget" hint={alpha ? "Per person, per month. The score compares the listing with this cap." : "Includes estimated rent, utilities, internet, and parking."} trailing="$ / person" error={error && error.includes("amount") ? error : null}>
         <input id="budget" inputMode="decimal" placeholder="1,450" value={budgetText} onInput={(e) => setBudgetText((e.currentTarget as HTMLInputElement).value)} />
       </Field>
 
@@ -61,9 +64,12 @@ export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBac
         ]}
       />
 
-      <Field label="Maximum commute time" id="maxCommute" trailing="minutes" error={error && error.includes("commute") ? error : null}>
-        <input id="maxCommute" inputMode="numeric" value={String(p.maxCommuteMinutes)} onInput={(e) => update({ maxCommuteMinutes: Number((e.currentTarget as HTMLInputElement).value) || 0 })} />
-      </Field>
+      {!alpha && (
+        <Field label="Maximum commute time" id="maxCommute" trailing="minutes" error={error && error.includes("commute") ? error : null}>
+          <input id="maxCommute" inputMode="numeric" value={String(p.maxCommuteMinutes)} onInput={(e) => update({ maxCommuteMinutes: Number((e.currentTarget as HTMLInputElement).value) || 0 })} />
+        </Field>
+      )}
+      {alpha && <p class="fine">How you get to campus is saved for a later release. This preview scores budget, lease, room, and amenities.</p>}
 
       <ChoiceGroup<LeaseType>
         label="Lease length"
@@ -93,7 +99,7 @@ export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBac
         <p class="small muted" style="margin-bottom:8px">Higher priorities count more toward your match.</p>
         <Card>
           <div class="prefs__priorities">
-            {CATEGORIES.map((c) => (
+            {scoredCategories(scope).map((c) => (
               <div class="priority" key={c}>
                 <span class="priority__label">{CATEGORY_TEXT[c]}</span>
                 <ChoiceGroup<Priority>

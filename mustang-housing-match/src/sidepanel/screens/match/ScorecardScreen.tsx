@@ -1,4 +1,5 @@
 import { TRANSPORT_MODES, type Category, type Commute, type Listing, type ModeResult, type Preferences, type TransportMode } from "@/core/domain";
+import { releaseScope, scoredCategories, type ReleaseScope } from "@/core/release";
 import { LEASE_LABEL, MODE_LABEL, type FitScoreResult } from "@/core/scoring";
 import { landlordQuestions } from "@/core/cost";
 import { Button } from "../../components/Button";
@@ -23,11 +24,13 @@ export function scoreBand(score: number): { title: string; label: string } {
   return { title: "A stretch for your priorities", label: "Weak match" };
 }
 
-function summary(r: FitScoreResult, prefs: Preferences, commute: Commute | null): string {
+function summary(r: FitScoreResult, prefs: Preferences, commute: Commute | null, scope: ReleaseScope): string {
   const parts: string[] = [];
   if (r.estimatedMonthlyTotal !== null && prefs.budget) parts.push(r.estimatedMonthlyTotal <= prefs.budget ? "Within budget." : "Over budget.");
-  const m = commute?.kind === "ok" ? commute.modes[prefs.transportMode] : null;
-  if (m?.kind === "ok") parts.push(`${Math.round(m.minutes)} min ${MODE_LABEL[prefs.transportMode].toLowerCase()} to campus.`);
+  if (scope !== "alpha") {
+    const m = commute?.kind === "ok" ? commute.modes[prefs.transportMode] : null;
+    if (m?.kind === "ok") parts.push(`${Math.round(m.minutes)} min ${MODE_LABEL[prefs.transportMode].toLowerCase()} to campus.`);
+  }
   if (r.watchOuts[0]) parts.push(r.watchOuts[0].text.replace(/;.*$/, "") + ".");
   return parts.slice(0, 3).join(" ");
 }
@@ -73,14 +76,17 @@ function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: Mo
   );
 }
 
-export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title, hideQuestions }: {
+export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title, hideQuestions, scope = releaseScope() }: {
   listing: Listing; result: FitScoreResult; prefs: Preferences; commute: CommuteState; save: SaveState;
   onSave: () => void; onEdit: () => void; onRetryCommute: () => void; onEditAddress: () => void; onAnother: () => void; onPreferences: () => void;
   /** Saved tab detail: no save, edit, or navigation actions; the surrounding screen owns those. */
   readOnly?: boolean; context?: string; title?: string;
   /** The Saved Listing detail shows its own editable question list above the Scorecard. */
   hideQuestions?: boolean;
+  /** Alpha hides commute, the cost breakdown, landlord questions, and saving. */
+  scope?: ReleaseScope;
 }) {
+  const alpha = scope === "alpha";
   const band = scoreBand(result.score);
   const c = commute.status === "done" ? commute.value : null;
   const recurring = result.breakdown.items.filter((i) => i.recurring);
@@ -100,12 +106,12 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
           <ScoreRing score={result.score} label="of 100" />
           <div>
             <div class="scorecard__band">{band.label}</div>
-            <div class="scorecard__summary">{summary(result, prefs, c)}</div>
+            <div class="scorecard__summary">{summary(result, prefs, c, scope)}</div>
           </div>
         </div>
       </Card>
 
-      <Section title="Estimated monthly total" aside="Per person" id="cost">
+      {!alpha && <Section title="Estimated monthly total" aside="Per person" id="cost">
         <Card>
           {total !== null ? (
             <>
@@ -137,11 +143,11 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
           </div>
           <p class="fine" style="margin-top:12px">Recurring costs only in the total. Deposit and application fees are one-time and excluded.{result.breakdown.bedroomsEstimated ? " Bedrooms weren't listed, so per-person estimates assume one." : ""}</p>
         </Card>
-      </Section>
+      </Section>}
 
       <Section title="Why this score?" aside="Based on your priorities" id="why">
         <Card>
-          {(["cost", "commute", "lease", "amenities"] as Category[]).map((cat) => {
+          {scoredCategories(scope).map((cat) => {
             const r = result.categories[cat];
             return (
               <CategoryBar
@@ -157,7 +163,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
         </Card>
       </Section>
 
-      <Section title="Commute to Cal Poly" aside={preferredMiles !== null ? `${preferredMiles.toFixed(1)} mi by ${MODE_LABEL[preferredMode].toLowerCase()}` : undefined} id="commute">
+      {!alpha && <Section title="Commute to Cal Poly" aside={preferredMiles !== null ? `${preferredMiles.toFixed(1)} mi by ${MODE_LABEL[preferredMode].toLowerCase()}` : undefined} id="commute">
         {commute.status === "loading" || commute.status === "idle" ? (
           <Card><p class="muted">Looking up the commute from this address…</p></Card>
         ) : c?.kind === "address-not-found" ? (
@@ -177,7 +183,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
             <p class="attrib">{c.attribution.map((a, i) => <span key={i}>{i > 0 ? " · " : ""}{a}</span>)}</p>
           </Card>
         ) : null}
-      </Section>
+      </Section>}
 
       {(result.benefits.length > 0 || result.watchOuts.length > 0) && (
         <Section title="Benefits and watch-outs" id="insights">
@@ -194,7 +200,7 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
         </Section>
       )}
 
-      {questions.length > 0 && !hideQuestions && (
+      {!alpha && questions.length > 0 && !hideQuestions && (
         <Section title="Ask the landlord" aside={`${questions.length} unknown${questions.length === 1 ? "" : "s"}`} id="questions">
           <Card>
             <ol class="questions">{questions.map((q) => <li key={q}>{q}</li>)}</ol>
@@ -205,16 +211,16 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
       <Notice tone="info">Estimates are labelled. Confirm prices, availability, and lease terms with the landlord before deciding.</Notice>
 
       {readOnly ? null : (<>
-      {save.status === "saved" && (
+      {!alpha && save.status === "saved" && (
         <Notice tone="success" title={`Saved to ${save.listName}`} role="status">
           {save.createdDefault ? "We made a list for you. Rename it or invite roommates from the Roommates tab." : "Your roommates can see it on the Saved tab."}
         </Notice>
       )}
-      {save.status === "duplicate" && <Notice tone="info" role="status">This listing is already on your list. Open it from the Saved tab.</Notice>}
-      {save.status === "error" && <Notice tone="danger" title="Couldn't save" role="alert">{save.message}</Notice>}
+      {!alpha && save.status === "duplicate" && <Notice tone="info" role="status">This listing is already on your list. Open it from the Saved tab.</Notice>}
+      {!alpha && save.status === "error" && <Notice tone="danger" title="Couldn't save" role="alert">{save.message}</Notice>}
 
       <div class="actions">
-        <Button onClick={onSave} disabled={save.status === "saving" || save.status === "saved"}>{save.status === "saving" ? "Saving…" : save.status === "saved" ? "Saved" : "Save listing"}</Button>
+        {!alpha && <Button onClick={onSave} disabled={save.status === "saving" || save.status === "saved"}>{save.status === "saving" ? "Saving…" : save.status === "saved" ? "Saved" : "Save listing"}</Button>}
         <Button variant="secondary" onClick={onEdit}>Edit details</Button>
         <div class="row row--between">
           <Button variant="link" onClick={onPreferences}>Change preferences</Button>

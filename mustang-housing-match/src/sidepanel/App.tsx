@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { TabBar, type TabId } from "./components/TabBar";
+import { isAlphaScope } from "@/core/release";
+import { TabBar, visibleTabs, type TabId } from "./components/TabBar";
 import { MatchTab } from "./screens/MatchTab";
 import { SavedTab } from "./screens/SavedTab";
 import { CompareTab } from "./screens/CompareTab";
@@ -23,8 +24,10 @@ export function App({ services: injected }: { services?: Services } = {}) {
     return { match, sharing };
   }, [services]);
   useEffect(() => () => { controllers?.match.dispose(); controllers?.sharing.dispose(); }, [controllers]);
+  const alpha = isAlphaScope();
+  const tabs = visibleTabs(alpha ? "alpha" : "full");
   return (
-    <div class="app">
+    <div class="app" data-release-scope={alpha ? "alpha" : "full"}>
       <header class="app__header">
         <div class="app__logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>
@@ -41,13 +44,13 @@ export function App({ services: injected }: { services?: Services } = {}) {
         ) : (
           <>
             {tab === "match" && <MatchTab services={services} controller={controllers.match} />}
-            {tab === "saved" && <SavedTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoRoommates={() => setTab("roommates")} />}
-            {tab === "compare" && <CompareTab controller={controllers.sharing} onNavigate={setTab} />}
-            {tab === "roommates" && <RoommatesTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoCompare={() => setTab("compare")} />}
+            {tabs.some((t) => t.id === "saved") && tab === "saved" && <SavedTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoRoommates={() => setTab("roommates")} />}
+            {tabs.some((t) => t.id === "compare") && tab === "compare" && <CompareTab controller={controllers.sharing} onNavigate={setTab} />}
+            {tabs.some((t) => t.id === "roommates") && tab === "roommates" && <RoommatesTab controller={controllers.sharing} onGoMatch={() => setTab("match")} onGoCompare={() => setTab("compare")} />}
           </>
         )}
       </main>
-      <TabBar active={tab} onChange={setTab} />
+      {tabs.length > 1 && <TabBar active={tab} onChange={setTab} />}
     </div>
   );
 }

@@ -2,7 +2,9 @@
 
 ## Alpha release (v0.1.0)
 
-The first preview build is [Mustang Housing Match v0.1.0 Alpha](https://github.com/aabro1325/mustang-housing-match/releases/tag/v0.1.0-alpha). Notes for this build are in [docs/releases/v0.1.0-alpha.md](docs/releases/v0.1.0-alpha.md).
+This preview covers two features: capturing a rental listing, and a personalized fit score. Commute times, the monthly cost breakdown, shared roommate lists, and tour/compare are coming in later releases. That code stays in the repo and is off in the alpha build (`VITE_RELEASE_SCOPE=alpha`, `npm run build:alpha`).
+
+Notes: [docs/releases/v0.1.0-alpha.md](docs/releases/v0.1.0-alpha.md). Release page: [v0.1.0-alpha](https://github.com/aabro1325/mustang-housing-match/releases/tag/v0.1.0-alpha).
 
 Quick install:
 

@@ -4,7 +4,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const distDir = fileURLToPath(new URL("../dist", import.meta.url));
+const distDir = process.env.E2E_DIST
+  ? fileURLToPath(new URL(process.env.E2E_DIST, import.meta.url))
+  : fileURLToPath(new URL("../dist", import.meta.url));
 
 export const test = base.extend<{ context: BrowserContext; extensionId: string }>({
   // eslint-disable-next-line no-empty-pattern
