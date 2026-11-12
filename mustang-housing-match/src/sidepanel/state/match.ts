@@ -79,7 +79,7 @@ export const initialMatchState: MatchState = {
 };
 
 export const SOURCE_LABEL: Record<SourceId, string> = {
-  zillow: "Zillow", craigslist: "Craigslist", apartments: "Apartments.com", text: "Text listing", manual: "Manual listing",
+  zillow: "Zillow", craigslist: "Craigslist", apartments: "Apartments.com", redfin: "Redfin", facebook: "Facebook Marketplace", "california-west": "California-West", "farrell-smyth": "Farrell Smyth", "rpm-central-coast": "RPM Central Coast", text: "Text listing", manual: "Manual listing",
 };
 
 export const UNSUPPORTED_TEXT =

@@ -108,7 +108,7 @@ export function PreferencesScreen({ initial, onSave, onBack, onPreview, canGoBac
                   compact
                   value={p.priorities[c]}
                   onChange={(v) => update({ priorities: { ...p.priorities, [c]: v } })}
-                  choices={[{ value: "low", label: "Low" }, { value: "med", label: "Med" }, { value: "high", label: "High" }]}
+                  choices={[{ value: "high", label: "Must-Have" }, { value: "med", label: "Nice-to-Have" }, { value: "low", label: "Not Important" }]}
                 />
               </div>
             ))}

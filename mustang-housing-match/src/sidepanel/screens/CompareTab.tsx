@@ -41,6 +41,15 @@ export function CompareTab({ controller, onNavigate }: { controller: SharingCont
   }
 
   const lead = view.columns.find((c) => c.saved.id === view.leaderId);
+  const shareSummary = () => {
+    const text = `Mustang Housing Match comparison (based on my saved preferences)\n\n${view.columns.map((c) => {
+      const link = c.saved.listing.sourceUrl ?? "Not listed";
+      const benefits = c.result.benefits.map((x) => x.text).join("; ") || "None listed";
+      const watchOuts = c.result.watchOuts.map((x) => x.text).join("; ") || "None";
+      return `${c.saved.listing.title}\nRent: ${c.rent}\nFit score: ${c.result.score}/100\nBenefits: ${benefits}\nWatch-outs: ${watchOuts}\nListing: ${link}`;
+    }).join("\n\n")}`;
+    void navigator.clipboard.writeText(text);
+  };
   return (
     <div class="stack">
       <Header context={`${n}-listing comparison`} title="See the real tradeoffs" lede="Side by side, without a spreadsheet. All amounts are monthly estimates per person." />
@@ -57,6 +66,11 @@ export function CompareTab({ controller, onNavigate }: { controller: SharingCont
       </div>
 
       <CompareTable columns={view.columns} leaderId={view.leaderId} prefs={s.prefs} />
+
+      <div class="actions" style="margin-top:0">
+        <Button onClick={shareSummary}>Copy Summary</Button>
+        <Button variant="secondary" onClick={() => window.print()}>Download Report (Print / PDF)</Button>
+      </div>
 
       {view.verdict && lead && (
         <Notice tone="warn" title={view.verdict.title}>{view.verdict.body}</Notice>

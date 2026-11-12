@@ -2,7 +2,7 @@
 
 export type SourceKind = "home" | "building" | "listing";
 export interface DetectedSource {
-  source: "zillow" | "craigslist" | "apartments";
+  source: "zillow" | "craigslist" | "apartments" | "redfin" | "facebook" | "california-west" | "farrell-smyth" | "rpm-central-coast";
   kind: SourceKind;
 }
 
@@ -42,6 +42,13 @@ export function detectSource(url: string): DetectedSource | null {
     if (/^\/[a-z0-9-]+\/[a-z0-9]{7}\/?$/.test(path)) return { source: "apartments", kind: "listing" };
     return null;
   }
+  // These sites are recognized so users get a clear manual-entry fallback. Their
+  // layout/login requirements have not been verified for automatic extraction.
+  if ((host === "redfin.com" || host.endsWith(".redfin.com")) && /\/[^/]+\/home\/\d+/.test(path)) return { source: "redfin", kind: "listing" };
+  if ((host === "facebook.com" || host.endsWith(".facebook.com")) && path.includes("/marketplace/item/")) return { source: "facebook", kind: "listing" };
+  if (host.includes("californiawest")) return { source: "california-west", kind: "listing" };
+  if (host.includes("farrellsmyth")) return { source: "farrell-smyth", kind: "listing" };
+  if (host.includes("rpmcentralcoast")) return { source: "rpm-central-coast", kind: "listing" };
   return null;
 }
 
