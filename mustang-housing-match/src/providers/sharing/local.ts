@@ -2,6 +2,7 @@ import type { Commute, Listing, Note, SavedListing } from "@/core/domain";
 import type { KeyValueStore } from "@/core/storage";
 import { SharingError, type ListChange, type Member, type SavedListingPatch, type SharedList, type SharingProvider } from "@/core/sharing/provider";
 import { randomToken } from "@/core/sharing/invite";
+import { normalizeAddress } from "@/core/address";
 
 interface LocalState {
   identityId: string;
@@ -116,7 +117,16 @@ export function localSharingProvider(deps: LocalDeps): SharingProvider {
     async addSavedListing(listId, listing: Listing, commute: Commute | null, landlordQuestions) {
       const s = await load();
       const e = entry(s, listId);
-      if (Object.values(e.saved).some((sl) => sl.listing.id === listing.id)) throw new SharingError("duplicate", "Already on the list");
+      const address = listing.facts.address.value ? normalizeAddress(listing.facts.address.value) : "";
+      const duplicate = Object.values(e.saved).some((sl) => {
+        if (sl.listing.id === listing.id) return true;
+        const savedAddress = sl.listing.facts.address.value ? normalizeAddress(sl.listing.facts.address.value) : "";
+        // Unit numbers remain part of normalizeAddress, so distinct units are retained.
+        // Address fallback is intentionally conservative: a matching title protects
+        // separately entered units/building listings that omit a unit number.
+        return address.length > 0 && address === savedAddress && sl.listing.title.trim().toLowerCase() === listing.title.trim().toLowerCase();
+      });
+      if (duplicate) throw new SharingError("duplicate", "This property is already saved");
       const at = now().toISOString();
       const sl: SavedListing = {
         id: newId(), listing, commute, status: "saved", finalist: false, tourAt: null, landlordQuestions,

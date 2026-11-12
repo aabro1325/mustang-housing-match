@@ -11,7 +11,7 @@ export const notListed = <T>(): Fact<T> => ({ value: null, provenance: "NotListe
 export const listed = <T>(value: T): Fact<T> => ({ value, provenance: "Listed" });
 export const corrected = <T>(value: T): Fact<T> => ({ value, provenance: "Corrected" });
 
-export type SourceId = "zillow" | "craigslist" | "apartments" | "text" | "manual";
+export type SourceId = "zillow" | "craigslist" | "apartments" | "redfin" | "facebook" | "california-west" | "farrell-smyth" | "rpm-central-coast" | "text" | "manual";
 export type LeaseType = "school-year" | "month-to-month" | "12-month";
 export type AmenityId = "parking" | "laundry" | "utilitiesIncluded" | "pets" | "furnished";
 export const AMENITIES: AmenityId[] = ["parking", "laundry", "utilitiesIncluded", "pets", "furnished"];
