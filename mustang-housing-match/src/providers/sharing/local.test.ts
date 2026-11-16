@@ -3,9 +3,9 @@ import { memoryStore } from "@/core/storage";
 import { emptyFacts, listed, type Listing } from "@/core/domain";
 import { localSharingProvider } from "./local";
 
-function listing(id: string): Listing {
+function listing(id: string, address = "870 Foothill Blvd"): Listing {
   const facts = emptyFacts();
-  facts.address = listed("870 Foothill Blvd");
+  facts.address = listed(address);
   facts.rent = listed(1250);
   return { id, source: "manual", sourceUrl: null, floorPlanId: null, title: id, facts, capturedAt: "2026-10-12T00:00:00Z" };
 }
@@ -39,6 +39,7 @@ describe("local sharing provider", () => {
     const sl = await p.addSavedListing(list.id, listing("L1"), null, ["Is parking included?"]);
     expect(sl.status).toBe("saved");
     await expect(p.addSavedListing(list.id, listing("L1"), null, [])).rejects.toMatchObject({ code: "duplicate" });
+    await expect(p.addSavedListing(list.id, listing("other-id"), null, [])).rejects.toMatchObject({ code: "duplicate" });
     const updated = await p.updateSavedListing(list.id, sl.id, { status: "tour-scheduled", tourAt: "2026-10-20T17:00:00Z", finalist: true });
     expect(updated.version).toBe(2);
     expect(updated.tourAt).toBe("2026-10-20T17:00:00Z");
@@ -55,7 +56,7 @@ describe("local sharing provider", () => {
     const p = provider();
     const { list } = await p.createList("Fall house", "Maya");
     const a = await p.addSavedListing(list.id, listing("A"), null, []);
-    const b = await p.addSavedListing(list.id, listing("B"), null, []);
+    const b = await p.addSavedListing(list.id, listing("B", "124 Hathway Ave"), null, []);
     await p.updateSavedListing(list.id, a.id, { status: "selected" });
     await p.updateSavedListing(list.id, b.id, { status: "selected" });
     const all = await p.listSavedListings(list.id);

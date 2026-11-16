@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mustang Housing Match privacy policy</title>
+    <style>
+      body { margin: 0; background: #f4f5f3; color: #16211c; font: 16px/1.5 system-ui, sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-size: 2rem; line-height: 1.15; }
+      h2 { font-size: 1.2rem; margin-top: 1.6em; }
+      a { color: #1e4d3b; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Mustang Housing Match privacy policy</h1>
+      <p>Independent student project for IME 4403 at Cal Poly San Luis Obispo. Not affiliated with Cal Poly or any listing site. This policy describes Chrome extension version 1.0.0.</p>
+
+      <h2>What stays on your device</h2>
+      <p>The extension stores data in your Chrome profile:</p>
+      <ul>
+        <li>Housing preferences (budget, transportation, lease, room, amenities, priorities) in <code>chrome.storage.sync</code>.</li>
+        <li>Saved listings, notes, tour times, statuses, and the local shared list in <code>chrome.storage.local</code>.</li>
+        <li>A cache of commute results for addresses you have already looked up.</li>
+        <li>Openrouteservice and Transitland API keys, if you paste them on the options page. Those keys are not included in the extension package.</li>
+      </ul>
+      <p>The extension does not run analytics and does not have an account system in the store build.</p>
+
+      <h2>What is read from a web page</h2>
+      <p>Nothing is read until you click <strong>Analyze listing</strong> or <strong>Analyze selected text</strong>. That click reads the listing you are viewing (address, rent, beds, baths, lease, fees, and amenities the page states) or the text you selected or pasted. The extension does not crawl pages in the background.</p>
+
+      <h2>Third-party services</h2>
+      <p>Commute lookups run only after you save both API keys in the extension options.</p>
+      <ul>
+        <li><strong>openrouteservice</strong> (HeiGIT) receives the listing address and returns coordinates plus walking, biking, and driving routes to the Robert E. Kennedy Library at Cal Poly.</li>
+        <li><strong>Transitland</strong> receives those coordinates and returns a weekday morning bus itinerary to the same library.</li>
+      </ul>
+      <p>If keys are missing, the panel says commute lookup is not set up. It does not send the address and it does not invent a travel time.</p>
+      <p>The store build keeps roommate lists on this device. A separately configured developer build can send the shared list to an AWS AppSync API the group operates. That endpoint is not packaged in the store zip.</p>
+
+      <h2>What this extension does not do</h2>
+      <ul>
+        <li>It does not sell or share your data with advertisers.</li>
+        <li>It does not request your precise device location.</li>
+        <li>It does not read pages you have not asked it to analyze.</li>
+        <li>It does not embed commute API keys in the download.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>Questions about this policy can be opened as an issue on the project repository: <a href="https://github.com/aabro1325/mustang-housing-match/issues">github.com/aabro1325/mustang-housing-match/issues</a>.</p>
+    </main>
+  </body>
+</html>

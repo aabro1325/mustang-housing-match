@@ -1,6 +1,6 @@
 {
   "name": "mustang-housing-match",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,8 @@
     "icons": "node scripts/make-icons.mjs",
     "check": "npm run typecheck && npm test && npm run e2e && npm run build",
     "outputs-to-env": "node scripts/outputs-to-env.mjs",
-    "build:e2e": "vite build --mode e2e && vite build -c vite.background.config.ts --mode e2e && vite build -c vite.capture.config.ts --mode e2e"
+    "build:e2e": "vite build --mode e2e && vite build -c vite.background.config.ts --mode e2e && vite build -c vite.capture.config.ts --mode e2e && node scripts/stamp-e2e-manifest.mjs",
+    "package:store": "node scripts/assert-no-bundled-secrets.mjs && vite build --mode production && vite build -c vite.background.config.ts --mode production && vite build -c vite.capture.config.ts --mode production && node scripts/check-store-dist.mjs && node scripts/zip-store.mjs"
   },
   "keywords": [],
   "author": "",

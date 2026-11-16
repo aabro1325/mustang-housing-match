@@ -1,5 +1,19 @@
 # mustang-housing-match
 
+## Launch build (1.0.0)
+
+The store package turns on every finished feature: capture, fit score, cost breakdown, Cal Poly commute, saved listings, and compare. Commute times need keys the student pastes on the extension options page. The zip does not contain those keys.
+
+Build and pack it from `mustang-housing-match/`:
+
+```
+npm install
+npm test
+npm run package:store
+```
+
+The zip is `mustang-housing-match/release/mustang-housing-match-1.0.0.zip`. Submission steps are in [SUBMISSION.md](SUBMISSION.md). The privacy policy is [docs/privacy-policy.md](docs/privacy-policy.md) and [docs/privacy/index.html](docs/privacy/index.html).
+
 ## Try the alpha (no build needed)
 
 The prebuilt extension is in `extension-alpha/` (`manifest.json` is directly inside that folder). You do not need Node or a build step.

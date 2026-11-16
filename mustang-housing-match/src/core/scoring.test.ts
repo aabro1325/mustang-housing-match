@@ -196,6 +196,15 @@ describe("fitScore", () => {
     expect(alphaDeposit.watchOuts.map((w) => w.text)).toContain("Lease length not listed; confirm the term before applying");
   });
 
+  it("does not throw when the preferred mode is missing", () => {
+    if (FOOTHILL_COMMUTE.kind !== "ok") throw new Error("fixture");
+    const modes = { ...FOOTHILL_COMMUTE.modes };
+    delete (modes as { bike?: unknown }).bike;
+    const bad = { ...FOOTHILL_COMMUTE, modes: modes as typeof FOOTHILL_COMMUTE.modes };
+    expect(() => fitScore(FOOTHILL.facts, bad, MAYA)).not.toThrow();
+    expect(fitScore(FOOTHILL.facts, bad, MAYA).categories.commute.points).toBe(0);
+  });
+
   it("gives no insight when there is no Commute yet or no budget", () => {
     const r = fitScore(FOOTHILL.facts, null, { ...MAYA, budget: null });
     expect(r.categories.cost.fraction).toBe(0.5);

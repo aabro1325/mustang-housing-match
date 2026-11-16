@@ -11,7 +11,7 @@ export const notListed = <T>(): Fact<T> => ({ value: null, provenance: "NotListe
 export const listed = <T>(value: T): Fact<T> => ({ value, provenance: "Listed" });
 export const corrected = <T>(value: T): Fact<T> => ({ value, provenance: "Corrected" });
 
-export type SourceId = "zillow" | "craigslist" | "apartments" | "text" | "manual";
+export type SourceId = "zillow" | "craigslist" | "apartments" | "redfin" | "text" | "manual";
 export type LeaseType = "school-year" | "month-to-month" | "12-month";
 export type AmenityId = "parking" | "laundry" | "utilitiesIncluded" | "pets" | "furnished";
 export const AMENITIES: AmenityId[] = ["parking", "laundry", "utilitiesIncluded", "pets", "furnished"];
@@ -95,6 +95,50 @@ export const DEFAULT_PREFERENCES: Preferences = {
   wantedAmenities: ["parking", "laundry", "utilitiesIncluded"],
   priorities: { cost: "high", commute: "high", lease: "med", amenities: "low" },
 };
+
+const PRIORITY_VALUES: Priority[] = ["low", "med", "high"];
+const TRANSPORT_VALUES: TransportMode[] = ["walk", "bike", "bus", "car"];
+const LEASE_VALUES: LeaseType[] = ["school-year", "month-to-month", "12-month"];
+const ROOM_VALUES: RoomType[] = ["private", "shared"];
+
+function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
+
+/**
+ * Stored preferences from older builds can omit nested fields. A shallow spread would leave
+ * `priorities.commute` undefined and the scorecard would throw while rendering.
+ */
+export function mergePreferences(saved: Partial<Preferences> | null | undefined): Preferences {
+  const base = DEFAULT_PREFERENCES;
+  if (!saved || typeof saved !== "object") return { ...base, priorities: { ...base.priorities }, wantedAmenities: [...base.wantedAmenities] };
+  const incoming = (saved.priorities ?? {}) as Partial<Preferences["priorities"]>;
+  const budget =
+    saved.budget === null ? null
+    : typeof saved.budget === "number" && Number.isFinite(saved.budget) && saved.budget > 0 ? saved.budget
+    : base.budget;
+  const maxCommuteMinutes =
+    typeof saved.maxCommuteMinutes === "number" && Number.isFinite(saved.maxCommuteMinutes) && saved.maxCommuteMinutes > 0
+      ? saved.maxCommuteMinutes
+      : base.maxCommuteMinutes;
+  const wantedAmenities = Array.isArray(saved.wantedAmenities)
+    ? saved.wantedAmenities.filter((a): a is AmenityId => (AMENITIES as readonly string[]).includes(a))
+    : [...base.wantedAmenities];
+  return {
+    budget,
+    transportMode: oneOf(saved.transportMode, TRANSPORT_VALUES, base.transportMode),
+    maxCommuteMinutes,
+    leaseType: oneOf(saved.leaseType, LEASE_VALUES, base.leaseType),
+    roomType: oneOf(saved.roomType, ROOM_VALUES, base.roomType),
+    wantedAmenities,
+    priorities: {
+      cost: oneOf(incoming.cost, PRIORITY_VALUES, base.priorities.cost),
+      commute: oneOf(incoming.commute, PRIORITY_VALUES, base.priorities.commute),
+      lease: oneOf(incoming.lease, PRIORITY_VALUES, base.priorities.lease),
+      amenities: oneOf(incoming.amenities, PRIORITY_VALUES, base.priorities.amenities),
+    },
+  };
+}
 
 export interface GeoPoint {
   lat: number;

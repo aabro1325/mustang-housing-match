@@ -4,6 +4,7 @@ import { Card } from "../../components/Card";
 import { Field } from "../../components/Field";
 import { Header } from "../../components/Header";
 import { Notice } from "../../components/Notice";
+import { LoadingStatus } from "../../components/LoadingStatus";
 import { CheckIcon } from "../../components/icons";
 import { SOURCE_LABEL, UNSUPPORTED_TEXT, type MatchState } from "../../state/match";
 
@@ -24,6 +25,10 @@ export function AnalyzeScreen({ state, onAnalyze, onAnalyzeText, onManual, onTex
     <div class="stack">
       <Header context="Analyze a listing" title={page.status === "supported" ? "Ready when you are" : "Find a listing to analyze"} lede={page.status === "supported" ? (alpha ? "We read the listing on this page and score how it fits your preferences." : "We read the listing on this page and show you how it fits before you save anything.") : undefined} />
 
+      {page.status === "unknown" && <LoadingStatus title="Checking this page" detail="Seeing whether this tab is a listing we can read." />}
+
+      {busy && <LoadingStatus title="Reading the listing" detail="This stays on the page until the address, rent, and other details are captured." />}
+
       {page.status === "supported" && (
         <Card>
           <div class="row row--between">
@@ -38,7 +43,7 @@ export function AnalyzeScreen({ state, onAnalyze, onAnalyzeText, onManual, onTex
         </Card>
       )}
 
-      {page.status !== "supported" && (
+      {page.status === "unsupported" && (
         <Card>
           <p>{UNSUPPORTED_TEXT}</p>
           {page.status === "unsupported" && page.textListingHint && (

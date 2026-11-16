@@ -1,7 +1,9 @@
 import { TRANSPORT_MODES, type Category, type Commute, type Listing, type ModeResult, type Preferences, type TransportMode } from "@/core/domain";
+import { COMMUTE_NOT_CONFIGURED } from "@/core/commute/messages";
 import { releaseScope, scoredCategories, type ReleaseScope } from "@/core/release";
 import { LEASE_LABEL, MODE_LABEL, type FitScoreResult } from "@/core/scoring";
 import { landlordQuestions } from "@/core/cost";
+import { LoadingStatus } from "../../components/LoadingStatus";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { CategoryBar } from "../../components/CategoryBar";
@@ -42,9 +44,13 @@ function categoryDetail(c: Category, r: FitScoreResult, prefs: Preferences, list
     case "commute": {
       if (!commute) return "Looking up the commute…";
       if (commute.kind === "address-not-found") return "Address could not be located.";
-      if (commute.kind === "transient-failure") return "Commute lookup failed.";
+      if (commute.kind === "transient-failure") {
+        return commute.message === COMMUTE_NOT_CONFIGURED ? "Add commute API keys in extension options." : "Commute lookup failed.";
+      }
       const m = commute.modes[prefs.transportMode];
-      return m.kind === "ok" ? `${Math.round(m.minutes)} min by ${MODE_LABEL[prefs.transportMode].toLowerCase()}; your limit is ${prefs.maxCommuteMinutes}.` : `No ${MODE_LABEL[prefs.transportMode].toLowerCase()} route found.`;
+      if (!m || m.kind !== "ok" || !Number.isFinite(m.minutes)) return `No ${MODE_LABEL[prefs.transportMode].toLowerCase()} route found.`;
+      const miles = Number.isFinite(m.miles) ? `${m.miles.toFixed(1)} miles, ` : "";
+      return `${miles}${Math.round(m.minutes)} min by ${MODE_LABEL[prefs.transportMode].toLowerCase()}; your limit is ${prefs.maxCommuteMinutes}.`;
     }
     case "lease": {
       const l = listing.facts.leaseType.value;
@@ -58,16 +64,20 @@ function categoryDetail(c: Category, r: FitScoreResult, prefs: Preferences, list
   }
 }
 
-function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: ModeResult; preferred: boolean }) {
+function formatMiles(miles: number | undefined): string | null {
+  return typeof miles === "number" && Number.isFinite(miles) ? `${miles.toFixed(1)} miles` : null;
+}
+
+function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: ModeResult | undefined; preferred: boolean }) {
   const Icon = MODE_ICON[mode];
+  const timed = result?.kind === "ok" && Number.isFinite(result.minutes) ? result : null;
   return (
     <div class={`mode ${preferred ? "mode--preferred" : ""}`} aria-label={`${MODE_LABEL[mode]}${preferred ? " (your mode)" : ""}`}>
-      <Icon />
-      <span class="mode__label">{MODE_LABEL[mode]}</span>
-      {result.kind === "ok" ? (
+      <span class="mode__head"><Icon /><span class="mode__label">{MODE_LABEL[mode]}{preferred ? " · your mode" : ""}</span></span>
+      {timed ? (
         <>
-          <span class="mode__time">{Math.round(result.minutes)} min</span>
-          <span class="mode__dist">{result.miles.toFixed(1)} mi</span>
+          <span class="mode__time">{Math.round(timed.minutes)} min</span>
+          <span class="mode__dist">{formatMiles(timed.miles) ?? "Distance unavailable"}</span>
         </>
       ) : (
         <span class="mode__na">Not available</span>
@@ -76,9 +86,10 @@ function ModeTile({ mode, result, preferred }: { mode: TransportMode; result: Mo
   );
 }
 
-export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, readOnly, context, title, hideQuestions, scope = releaseScope() }: {
+export function ScorecardScreen({ listing, result, prefs, commute, save, onSave, onEdit, onRetryCommute, onEditAddress, onAnother, onPreferences, onOpenOptions, readOnly, context, title, hideQuestions, scope = releaseScope() }: {
   listing: Listing; result: FitScoreResult; prefs: Preferences; commute: CommuteState; save: SaveState;
   onSave: () => void; onEdit: () => void; onRetryCommute: () => void; onEditAddress: () => void; onAnother: () => void; onPreferences: () => void;
+  onOpenOptions?: () => void;
   /** Saved tab detail: no save, edit, or navigation actions; the surrounding screen owns those. */
   readOnly?: boolean; context?: string; title?: string;
   /** The Saved Listing detail shows its own editable question list above the Scorecard. */
@@ -95,11 +106,30 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
   const budgetDiff = total !== null && prefs.budget ? prefs.budget - total : null;
   const questions = landlordQuestions(listing.facts, result.breakdown);
   const preferredMode = prefs.transportMode;
-  const preferredMiles = c?.kind === "ok" && c.modes[preferredMode].kind === "ok" ? (c.modes[preferredMode] as { miles: number }).miles : null;
+  const preferredResult = c?.kind === "ok" ? c.modes[preferredMode] : undefined;
+  const preferredMiles = preferredResult?.kind === "ok" ? formatMiles(preferredResult.miles) : null;
+  const notConfigured = c?.kind === "transient-failure" && c.message === COMMUTE_NOT_CONFIGURED;
+  const commutePending = !alpha && commute.status === "loading";
 
   return (
     <div class="stack">
       <Header context={context ?? "Your listing match"} title={title ?? band.title} lede={`${listing.title} · ${SOURCE_LABEL[listing.source]}`} />
+
+      {commutePending && (
+        <LoadingStatus title="Calculating distance and commute" detail="Looking up walk, bike, bus, and driving times to Kennedy Library. The score updates when this finishes." />
+      )}
+      {!alpha && c?.kind === "address-not-found" && (
+        <Notice tone="danger" title="Address could not be located" role="alert">
+          Commute isn't scored until the address is fixed. Check the street and city, then try again. {!readOnly && <Button variant="link" onClick={onEditAddress}>Edit address</Button>}
+        </Notice>
+      )}
+      {!alpha && c?.kind === "transient-failure" && (
+        <Notice tone="warn" title={notConfigured ? "Commute lookup isn't set up" : "Commute lookup failed"} role="alert">
+          {c.message}{" "}
+          {notConfigured && onOpenOptions && <Button variant="link" onClick={onOpenOptions}>Open options</Button>}
+          {!notConfigured && !readOnly && <Button variant="link" onClick={onRetryCommute}>Retry</Button>}
+        </Notice>
+      )}
 
       <Card tone="brand">
         <div class="scorecard__hero">
@@ -163,26 +193,22 @@ export function ScorecardScreen({ listing, result, prefs, commute, save, onSave,
         </Card>
       </Section>
 
-      {!alpha && <Section title="Commute to Cal Poly" aside={preferredMiles !== null ? `${preferredMiles.toFixed(1)} mi by ${MODE_LABEL[preferredMode].toLowerCase()}` : undefined} id="commute">
-        {commute.status === "loading" || commute.status === "idle" ? (
+      {!alpha && <Section title="Commute to Cal Poly" aside={preferredMiles ? `${preferredMiles} by ${MODE_LABEL[preferredMode].toLowerCase()}` : undefined} id="commute">
+        {commutePending ? (
           <Card><p class="muted">Looking up the commute from this address…</p></Card>
-        ) : c?.kind === "address-not-found" ? (
-          <Notice tone="danger" title="Address could not be located" role="alert">
-            Commute isn't scored until the address is fixed. {!readOnly && <Button variant="link" onClick={onEditAddress}>Edit address</Button>}
-          </Notice>
-        ) : c?.kind === "transient-failure" ? (
-          <Notice tone="warn" title="Commute lookup failed" role="alert">
-            {c.message} {!readOnly && <Button variant="link" onClick={onRetryCommute}>Retry</Button>}
-          </Notice>
-        ) : c ? (
+        ) : c?.kind === "ok" ? (
           <Card>
             <div class="modes">
               {TRANSPORT_MODES.map((m) => <ModeTile key={m} mode={m} result={c.modes[m]} preferred={m === preferredMode} />)}
             </div>
-            <p class="fine" style="margin-top:12px">To Kennedy Library. Bus time is for a weekday 8 AM departure. Estimates, not live traffic.</p>
+            <p class="fine" style="margin-top:12px">Distance is in miles, to Kennedy Library. Bus time is for a weekday 8 AM departure. Estimates, not live traffic.</p>
             <p class="attrib">{c.attribution.map((a, i) => <span key={i}>{i > 0 ? " · " : ""}{a}</span>)}</p>
           </Card>
-        ) : null}
+        ) : commute.status === "idle" ? (
+          <Notice tone="info" title="Commute not calculated">This listing doesn't have a commute yet. Analyze it from the Match tab to look up distance and travel times.</Notice>
+        ) : (
+          <p class="fine">See the message above for why this commute isn't shown.</p>
+        )}
       </Section>}
 
       {(result.benefits.length > 0 || result.watchOuts.length > 0) && (

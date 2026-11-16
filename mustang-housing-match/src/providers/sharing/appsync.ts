@@ -2,6 +2,7 @@ import type { Commute, Listing, Note, SavedListing } from "@/core/domain";
 import type { KeyValueStore } from "@/core/storage";
 import { SharingError, type ListChange, type SavedListingPatch, type SharedList, type SharingProvider } from "@/core/sharing/provider";
 import { randomToken } from "@/core/sharing/invite";
+import { isDuplicate } from "@/core/address";
 
 /**
  * The slice of the Amplify Data client this provider uses, so tests can pass a fake and the panel can pass
@@ -141,7 +142,7 @@ export function appSyncSharingProvider(deps: AppSyncDeps): SharingProvider {
     },
     async addSavedListing(listId, listing, commute, landlordQuestions) {
       const existing = await this.listSavedListings(listId);
-      if (existing.some((s) => s.listing.id === listing.id)) throw new SharingError("duplicate", "Already on the list");
+      if (existing.some((s) => isDuplicate(s.listing, listing))) throw new SharingError("duplicate", "Already on the list");
       const c = await run<Record<string, unknown>>(
         Q.addSavedListing,
         { listId, listing: JSON.stringify(listing), commute: commute ? JSON.stringify(commute) : null, landlordQuestions },

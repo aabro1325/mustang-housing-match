@@ -8,8 +8,8 @@ export const PRIORITY_WEIGHT: Record<Priority, number> = { high: 3, med: 2, low:
 /** 100 × weight / sum, with largest-remainder rounding so the scored maxima sum to exactly 100 (ties go in category order). Alpha omits Commute and re-normalizes Cost, Lease, and Amenities. */
 export function categoryMaxima(priorities: Record<Category, Priority>, scope: ReleaseScope = "full"): Record<Category, number> {
   const active = scoredCategories(scope);
-  const weights = active.map((c) => PRIORITY_WEIGHT[priorities[c]]);
-  const sum = weights.reduce((a, b) => a + b, 0);
+  const weights = active.map((c) => PRIORITY_WEIGHT[priorities[c]] ?? PRIORITY_WEIGHT.med);
+  const sum = weights.reduce((a, b) => a + b, 0) || active.length;
   const raw = weights.map((w) => (100 * w) / sum);
   const floors = raw.map(Math.floor);
   let remainder = 100 - floors.reduce((a, b) => a + b, 0);
@@ -42,7 +42,7 @@ export function costFraction(total: number | null, budget: number | null): numbe
 export function preferredMinutes(commute: Commute | null, mode: TransportMode): number | null {
   if (!commute || commute.kind !== "ok") return null;
   const m = commute.modes[mode];
-  return m.kind === "ok" ? m.minutes : null;
+  return m && m.kind === "ok" && Number.isFinite(m.minutes) ? m.minutes : null;
 }
 
 export function commuteFraction(commute: Commute | null, prefs: Preferences): number {

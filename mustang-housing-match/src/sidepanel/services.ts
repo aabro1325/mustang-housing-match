@@ -45,7 +45,13 @@ export async function createServices(): Promise<Services> {
   const sync = chromeStore("sync");
   const env = import.meta.env as Record<string, string | undefined>;
   const commute = cachedProvider(
-    createCommuteProvider(env, { fetch: globalThis.fetch.bind(globalThis) }),
+    createCommuteProvider(env, {
+      fetch: globalThis.fetch.bind(globalThis),
+      keys: async () => {
+        const { readCommuteKeys } = await import("@/chrome/commuteKeys");
+        return readCommuteKeys();
+      },
+    }),
     { get: (k) => local.get(k), set: (k, v) => local.set(k, v) },
     normalizeAddress,
   );

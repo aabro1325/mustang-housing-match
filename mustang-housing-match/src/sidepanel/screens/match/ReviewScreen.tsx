@@ -33,7 +33,7 @@ function FactField({ label, fact, onChange, inputMode = "decimal", prefix, place
         <input
           id={id} inputMode={inputMode} placeholder={placeholder ?? "Not listed"}
           value={fact.value === null ? "" : `${prefix ?? ""}${fact.value}`}
-          onChange={(e) => onChange(numberFact((e.currentTarget as HTMLInputElement).value, fact))}
+          onInput={(e) => onChange(numberFact((e.currentTarget as HTMLInputElement).value, fact))}
         />
       </div>
     </div>
@@ -101,7 +101,7 @@ export function ReviewScreen({ review, onEdit, onAmenity, onRentBasis, onPlan, o
             <label class="fact__label" for="f-address"><span>Address</span><ProvenanceTag provenance={f.address.provenance} /></label>
             <div class="field__control">
               <input id="f-address" value={f.address.value ?? ""} placeholder="870 Foothill Blvd, San Luis Obispo" required={manual}
-                onChange={(e) => { const v = (e.currentTarget as HTMLInputElement).value.trim(); onEdit("address", v ? (v === f.address.value ? f.address : corrected(v)) : notListed()); }} />
+                onInput={(e) => { const v = (e.currentTarget as HTMLInputElement).value.trim(); onEdit("address", v ? (v === f.address.value ? f.address : corrected(v)) : notListed()); }} />
             </div>
             {manual && addressMissing && <div class="field__hint">{alpha ? "Required." : "Required: the commute is measured from here."}</div>}
           </div>

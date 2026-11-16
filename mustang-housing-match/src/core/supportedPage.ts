@@ -2,7 +2,7 @@
 
 export type SourceKind = "home" | "building" | "listing";
 export interface DetectedSource {
-  source: "zillow" | "craigslist" | "apartments";
+  source: "zillow" | "craigslist" | "apartments" | "redfin";
   kind: SourceKind;
 }
 
@@ -24,23 +24,29 @@ export function detectSource(url: string): DetectedSource | null {
     const source = u.searchParams.get("mhm-source");
     const kind = u.searchParams.get("kind");
     if (source === "zillow") return { source, kind: kind === "building" ? "building" : "home" };
-    if (source === "craigslist" || source === "apartments") return { source, kind: "listing" };
+    if (source === "craigslist" || source === "apartments" || source === "redfin") return { source, kind: "listing" };
     return null;
   }
 
   if (host === "zillow.com" || host.endsWith(".zillow.com")) {
-    if (/^\/homedetails\/[^/]+\/\d+_zpid\/?$/.test(path)) return { source: "zillow", kind: "home" };
-    if (/^\/apartments\/[^/]+\/[^/]+\/[A-Za-z0-9]+\/?$/.test(path)) return { source: "zillow", kind: "building" };
+    // Home details sometimes grow an extra segment; building pages use /apartments/… and /b/….
+    if (/\/homedetails\/.+\/\d+_zpid\b/.test(path)) return { source: "zillow", kind: "home" };
+    if (/^\/apartments\/[^/]+\/[^/]+\/[A-Za-z0-9]+/.test(path)) return { source: "zillow", kind: "building" };
+    if (/^\/b\/[^/]+/.test(path)) return { source: "zillow", kind: "building" };
     return null;
   }
   if (host === "craigslist.org" || host.endsWith(".craigslist.org")) {
     if (/^\/view\/d\/[^/]+\/[A-Za-z0-9]+\/?$/.test(path)) return { source: "craigslist", kind: "listing" };
-    if (/^\/[a-z]{3}\/d\/[^/]+\/\d+\.html$/.test(path)) return { source: "craigslist", kind: "listing" };
+    if (/\/d\/[^/]+\/\d+\.html$/.test(path)) return { source: "craigslist", kind: "listing" };
     return null;
   }
   if (host === "apartments.com" || host.endsWith(".apartments.com")) {
-    if (/^\/[a-z0-9-]+\/[a-z0-9]{7}\/?$/.test(path)) return { source: "apartments", kind: "listing" };
+    // Listing ids vary in length. City and search pages are a single path segment and stay unsupported.
+    if (/^\/[a-z0-9-]+\/[a-z0-9]{5,12}\/?$/i.test(path)) return { source: "apartments", kind: "listing" };
     return null;
+  }
+  if ((host === "redfin.com" || host.endsWith(".redfin.com")) && /\/home\/\d+/.test(path)) {
+    return { source: "redfin", kind: "listing" };
   }
   return null;
 }
