@@ -42,6 +42,25 @@ test("set preferences, analyze the fixture Zillow page, see a Scorecard, save it
   await panel.screenshot({ path: "test-results/scorecard.png", fullPage: true });
 });
 
+test("an address that cannot be located shows an error instead of a blank panel", async ({ context, extensionId }) => {
+  const other = await context.newPage();
+  await other.goto("http://localhost:4173/");
+  const panel = await context.newPage();
+  await panel.goto(panelUrl(extensionId));
+  await panel.getByRole("button", { name: "Skip for now" }).click();
+  await expect(panel.getByText(/isn't a supported listing/)).toBeVisible();
+  await panel.getByRole("button", { name: "Add listing manually" }).click();
+  await expect(panel.getByRole("heading", { name: "Tell us about the place" })).toBeVisible();
+  await panel.getByLabel("Address").fill("1 Nowhere Lane, San Luis Obispo");
+  await panel.getByLabel("Monthly rent").click();
+  await panel.getByLabel("Monthly rent").fill("1500");
+  await expect(panel.getByRole("button", { name: "Analyze listing" })).toBeEnabled();
+  await panel.getByRole("button", { name: "Analyze listing" }).click();
+  await expect(panel.getByRole("alert")).toContainText(/could not be located/i);
+  await expect(panel.getByRole("img", { name: /Fit Score \d+ out of 100/ })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Edit address" })).toBeVisible();
+});
+
 test("an unsupported page offers manual and text entry; manual listing scores", async ({ context, extensionId }) => {
   const other = await context.newPage();
   await other.goto("http://localhost:4173/");

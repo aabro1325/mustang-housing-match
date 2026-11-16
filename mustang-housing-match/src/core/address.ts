@@ -55,9 +55,10 @@ export function listingIdentity(input: IdentityInput): string {
   return `address:${normalizeAddress(input.address ?? "")}`;
 }
 
-/** Same identity, or same normalised address (unit number kept). */
+/** Same identity, or same normalised address (unit number kept). Different floor plans stay distinct. */
 export function isDuplicate(a: Listing, b: Listing): boolean {
   if (a.id === b.id) return true;
+  if (a.floorPlanId && b.floorPlanId && a.floorPlanId !== b.floorPlanId) return false;
   const aa = a.facts.address.value;
   const ba = b.facts.address.value;
   if (!aa || !ba) return false;

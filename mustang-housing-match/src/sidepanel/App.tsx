@@ -5,6 +5,7 @@ import { MatchTab } from "./screens/MatchTab";
 import { SavedTab } from "./screens/SavedTab";
 import { CompareTab } from "./screens/CompareTab";
 import { RoommatesTab } from "./screens/RoommatesTab";
+import { PanelErrorBoundary } from "./components/ErrorBoundary";
 import { createServices, type Services } from "./services";
 import { MatchController } from "./state/match";
 import { SharingController } from "./state/sharing";
@@ -27,6 +28,7 @@ export function App({ services: injected }: { services?: Services } = {}) {
   const alpha = isAlphaScope();
   const tabs = visibleTabs(alpha ? "alpha" : "full");
   return (
+    <PanelErrorBoundary>
     <div class="app" data-release-scope={alpha ? "alpha" : "full"}>
       <header class="app__header">
         <div class="app__logo" aria-hidden="true">
@@ -52,5 +54,6 @@ export function App({ services: injected }: { services?: Services } = {}) {
       </main>
       {tabs.length > 1 && <TabBar active={tab} onChange={setTab} />}
     </div>
+    </PanelErrorBoundary>
   );
 }

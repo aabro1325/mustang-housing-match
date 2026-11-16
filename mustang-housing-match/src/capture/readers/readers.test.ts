@@ -116,6 +116,42 @@ describe("Craigslist posting", () => {
   });
 });
 
+describe("Zillow layouts where the listing is not the first cache entry", () => {
+  it("reads the property from a later gdpClientCache key", () => {
+    const cache = {
+      "query:metadata": { other: true },
+      "listing:1": { property: { streetAddress: "1 Mustang Way, San Luis Obispo, CA", price: 1800, bedrooms: 2, bathrooms: 1 } },
+    };
+    const html = `<title>1 Mustang Way</title><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+      props: { pageProps: { componentProps: { gdpClientCache: JSON.stringify(cache) } } },
+    })}</script>`;
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const r = capturePage(doc, "https://www.zillow.com/homedetails/1-Mustang-Way-San-Luis-Obispo-CA/1_zpid/");
+    expect(r.facts?.address.value).toBe("1 Mustang Way, San Luis Obispo, CA");
+    expect(r.facts?.rent.value).toBe(1800);
+    expect(r.facts?.bedrooms.value).toBe(2);
+    expect(r.warnings).toEqual([]);
+  });
+});
+
+describe("Redfin home page", () => {
+  it("reads the header stats and the about section", () => {
+    const r = capturePage(fixture("redfin.html"), "https://www.redfin.com/CA/San-Luis-Obispo/123-Mustang-Way-93405/home/12345678");
+    expect(r.source).toBe("redfin");
+    const f = r.facts!;
+    expect(f.address.value).toBe("123 Mustang Way, San Luis Obispo, CA 93405");
+    expect(f.rent.value).toBe(1895);
+    expect(f.bedrooms.value).toBe(2);
+    expect(f.bathrooms.value).toBe(1);
+    expect(f.leaseType.value).toBe("school-year");
+    expect(f.deposit.value).toBe(1895);
+    expect(f.amenities.laundry.value).toBe(true);
+    expect(f.amenities.parking.value).toBe(true);
+    expect(f.amenities.pets.value).toBe(true);
+    expect(r.warnings).toEqual([]);
+  });
+});
+
 describe("Apartments.com property page", () => {
   const r = capturePage(fixture("apartments.html"), "https://www.apartments.com/twin-creeks-san-luis-obispo-ca/sqnz3v4/");
   it("reads the DOM sections and the pricing grid", () => {

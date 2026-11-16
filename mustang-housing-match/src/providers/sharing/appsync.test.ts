@@ -3,9 +3,9 @@ import { memoryStore } from "@/core/storage";
 import { emptyFacts, listed, type Listing } from "@/core/domain";
 import { appSyncSharingProvider, Q, type GraphqlClient } from "./appsync";
 
-function listing(id: string): Listing {
+function listing(id: string, address = "870 Foothill Blvd"): Listing {
   const facts = emptyFacts();
-  facts.address = listed("870 Foothill Blvd");
+  facts.address = listed(address);
   return { id, source: "manual", sourceUrl: null, floorPlanId: null, title: id, facts, capturedAt: "2026-10-12T00:00:00Z" };
 }
 
@@ -69,7 +69,8 @@ describe("appsync sharing provider", () => {
     expect(rows[0]!.listing.facts.address.value).toBe("870 Foothill Blvd");
     expect(rows[0]!.notes[0]!.text).toBe("hi");
     await expect(p.addSavedListing("L", listing("A"), null, [])).rejects.toMatchObject({ code: "duplicate" });
-    const added = await p.addSavedListing("L", listing("B"), null, ["Q?"]);
+    await expect(p.addSavedListing("L", listing("same-place"), null, [])).rejects.toMatchObject({ code: "duplicate" });
+    const added = await p.addSavedListing("L", listing("B", "124 Hathway Ave"), null, ["Q?"]);
     expect(added.id).toBe("B");
     expect(typeof calls.at(-1)!.vars.listing).toBe("string");
   });

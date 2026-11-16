@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mustang Housing Match options</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Commute API keys</h1>
+      <p>
+        Distance and travel times use openrouteservice and Transitland. Keys stay in this browser
+        (<code>chrome.storage.local</code>). They are not part of the extension package. Leave both blank to
+        skip live lookups; the panel will say commute isn't set up instead of inventing a time.
+      </p>
+      <form id="keys">
+        <label for="ors">openrouteservice key</label>
+        <input id="ors" name="ors" type="password" autocomplete="off" spellcheck="false" />
+        <label for="transit">Transitland key</label>
+        <input id="transit" name="transit" type="password" autocomplete="off" spellcheck="false" />
+        <button type="submit">Save keys</button>
+        <p id="status" role="status"></p>
+      </form>
+      <h2>What gets sent</h2>
+      <ul>
+        <li>The listing address is sent to openrouteservice to find coordinates and walk, bike, and driving routes to Kennedy Library.</li>
+        <li>Those coordinates are sent to Transitland for a weekday morning bus itinerary.</li>
+        <li>Preferences and saved listings stay on this device unless a developer build is pointed at a shared backend.</li>
+      </ul>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

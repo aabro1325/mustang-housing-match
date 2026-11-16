@@ -38,8 +38,16 @@ function readHome(nd: unknown, facts: ListingFacts, warnings: string[]): boolean
     }
   }
   if (!cache || typeof cache !== "object") return false;
-  const firstKey = Object.keys(cache as object)[0];
-  const property = firstKey ? get(cache, `${firstKey}.property`) : undefined;
+  // The first cache entry is not always the listing. Some layouts put a query wrapper first.
+  const cacheObj = cache as Record<string, unknown>;
+  let property: unknown;
+  for (const key of Object.keys(cacheObj)) {
+    const candidate = get(cacheObj, `${key}.property`);
+    if (candidate && typeof candidate === "object") {
+      property = candidate;
+      break;
+    }
+  }
   if (!property || typeof property !== "object") {
     warnings.push("No property in gdpClientCache");
     return false;

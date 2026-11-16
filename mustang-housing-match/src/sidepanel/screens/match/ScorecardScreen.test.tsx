@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/preact";
 import { FOOTHILL, FOOTHILL_COMMUTE, MAYA } from "@/core/fixtures";
 import { fitScore } from "@/core/scoring";
 import { ScorecardScreen, scoreBand } from "./ScorecardScreen";
 
 const noop = () => {};
+afterEach(() => cleanup());
 
 function renderFoothill(over: Partial<Parameters<typeof ScorecardScreen>[0]> = {}) {
   const result = fitScore(FOOTHILL.facts, FOOTHILL_COMMUTE, MAYA);
@@ -86,6 +87,31 @@ describe("ScorecardScreen", () => {
     expect(screen.getByRole("button", { name: "Change preferences" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Benefits and watch-outs" })).toBeTruthy();
     cleanup();
+  });
+
+  it("shows a loading status while the commute lookup is in flight", () => {
+    const result = fitScore(FOOTHILL.facts, null, MAYA);
+    render(
+      <ScorecardScreen listing={FOOTHILL} result={result} prefs={MAYA} commute={{ status: "loading" }} save={{ status: "idle" }}
+        onSave={noop} onEdit={noop} onRetryCommute={noop} onEditAddress={noop} onAnother={noop} onPreferences={noop} />,
+    );
+    expect(screen.getByRole("status").textContent).toMatch(/Calculating distance and commute/);
+    expect(screen.getByText("Looking up the commute from this address…")).toBeTruthy();
+  });
+
+  it("keeps distance readable and does not throw when a mode is missing", () => {
+    if (FOOTHILL_COMMUTE.kind !== "ok") throw new Error("fixture");
+    const modes = { ...FOOTHILL_COMMUTE.modes };
+    delete (modes as { bike?: unknown }).bike;
+    const broken = { ...FOOTHILL_COMMUTE, modes: modes as typeof FOOTHILL_COMMUTE.modes };
+    const result = fitScore(FOOTHILL.facts, broken, MAYA);
+    render(
+      <ScorecardScreen listing={FOOTHILL} result={result} prefs={MAYA} commute={{ status: "done", value: broken }} save={{ status: "idle" }}
+        onSave={noop} onEdit={noop} onRetryCommute={noop} onEditAddress={noop} onAnother={noop} onPreferences={noop} />,
+    );
+    expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("1.2 miles").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("img", { name: /Fit Score/ }).length).toBeGreaterThan(0);
   });
 
   it("bands the headline by score", () => {

@@ -44,6 +44,7 @@
 .field__control select { padding-right: 32px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235e6b64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; }
 .field__control input::placeholder { color: var(--color-text-faint); }
 .field__trailing { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: var(--text-sm); pointer-events: none; }
+.field__control:has(.field__trailing) input { padding-right: 7.5rem; }
 .field__hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 6px; }
 .field__hint--error { color: var(--color-danger); }
 .field--error .field__control input { border-color: var(--color-danger); }

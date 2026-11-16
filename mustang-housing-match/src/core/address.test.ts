@@ -70,4 +70,13 @@ describe("isDuplicate", () => {
     expect(isDuplicate(mk("a", "1453 Lizzie St #1"), mk("b", "1453 Lizzie St #2"))).toBe(false);
     expect(isDuplicate(mk("a", null), mk("b", null))).toBe(false);
   });
+  it("keeps different floor plans at the same building", () => {
+    const a = mk("a", "1150 Chorro St");
+    const b = mk("b", "1150 Chorro St");
+    a.floorPlanId = "1bd";
+    b.floorPlanId = "2bd";
+    expect(isDuplicate(a, b)).toBe(false);
+    b.floorPlanId = "1bd";
+    expect(isDuplicate(a, b)).toBe(true);
+  });
 });

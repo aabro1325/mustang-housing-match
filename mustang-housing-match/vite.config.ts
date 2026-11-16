@@ -13,7 +13,10 @@ export default defineConfig({
     target: "es2022",
     modulePreload: false,
     rollupOptions: {
-      input: { sidepanel: fileURLToPath(new URL("./src/sidepanel/index.html", import.meta.url)) },
+      input: {
+        sidepanel: fileURLToPath(new URL("./src/sidepanel/index.html", import.meta.url)),
+        options: fileURLToPath(new URL("./src/options/index.html", import.meta.url)),
+      },
       output: { entryFileNames: "assets/[name]-[hash].js", chunkFileNames: "assets/[name]-[hash].js" },
     },
   },

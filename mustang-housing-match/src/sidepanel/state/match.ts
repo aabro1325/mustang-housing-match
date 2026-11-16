@@ -1,7 +1,7 @@
 // The Match tab flow: Welcome → Preferences → Analyze → Review → Scorecard, with Save.
 // All state lives in one store; the controller owns every side effect so screens stay declarative.
 import {
-  DEFAULT_PREFERENCES, emptyFacts, listed, corrected, type Commute, type Fact, type FloorPlan, type Listing, type ListingFacts,
+  DEFAULT_PREFERENCES, emptyFacts, listed, corrected, mergePreferences, type Commute, type Fact, type FloorPlan, type Listing, type ListingFacts,
   type Preferences, type RentBasis, type SourceId,
 } from "@/core/domain";
 import { releaseScope, type ReleaseScope } from "@/core/release";
@@ -79,11 +79,11 @@ export const initialMatchState: MatchState = {
 };
 
 export const SOURCE_LABEL: Record<SourceId, string> = {
-  zillow: "Zillow", craigslist: "Craigslist", apartments: "Apartments.com", text: "Text listing", manual: "Manual listing",
+  zillow: "Zillow", craigslist: "Craigslist", apartments: "Apartments.com", redfin: "Redfin", text: "Text listing", manual: "Manual listing",
 };
 
 export const UNSUPPORTED_TEXT =
-  "This page isn't a supported listing. Supported: Zillow, Craigslist, Apartments.com. You can add this listing manually or paste the post text.";
+  "This page isn't a supported listing. Supported: Zillow, Craigslist, Apartments.com, and Redfin. You can add this listing manually or paste the post text.";
 
 function applyFloorPlan(base: ListingFacts, plan: FloorPlan | undefined): ListingFacts {
   if (!plan) return base;
@@ -114,7 +114,7 @@ export class MatchController {
     const hasPrefs = !!prefs;
     this.patch({
       loaded: true,
-      prefs: prefs ? { ...DEFAULT_PREFERENCES, ...prefs } : DEFAULT_PREFERENCES,
+      prefs: mergePreferences(prefs),
       onboarded: !!onboarded || hasPrefs,
       screen: !!onboarded || hasPrefs ? "analyze" : "welcome",
     });
@@ -194,7 +194,8 @@ export class MatchController {
       try {
         text = (await this.services.selectedText(page.tabId)).trim();
       } catch {
-        text = "";
+        this.patch({ textError: "Chrome couldn't read the selection on this page. Paste the post text below." });
+        return;
       }
     }
     if (!text) {
@@ -271,9 +272,14 @@ export class MatchController {
       facts: review.facts,
       capturedAt: this.services.now().toISOString(),
     };
-    this.patch({ listing, screen: "scorecard", commute: { status: "idle" }, save: { status: "idle" } });
+    this.patch({
+      listing,
+      screen: "scorecard",
+      // Show the loading state on the first paint. Alpha never looks a commute up.
+      commute: this.scope === "alpha" ? { status: "idle" } : { status: "loading" },
+      save: { status: "idle" },
+    });
     this.recompute();
-    // Alpha does not show or score Commute, so it does not look one up.
     if (this.scope !== "alpha") await this.lookupCommute();
   }
 

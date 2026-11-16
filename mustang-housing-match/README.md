@@ -15,6 +15,12 @@ What it does, in one pass:
 4. **Share** a list with roommates by invitation link; everyone sees the same saved listings, statuses, tour dates,
    notes and questions, plus a Group Fit across everyone's scores. Compare finalists side by side.
 
+## Launch build
+
+`npm run package:store` writes `release/mustang-housing-match-1.0.0.zip` and checks that commute API keys were not compiled in. Load `dist/` unpacked, or unzip the release. Open the extension options and paste an openrouteservice key and a Transitland key before expecting live commute times. Without them, the scorecard explains that commute lookup is not set up.
+
+The alpha preview (`npm run build:alpha`, or the `extension-alpha/` folder at the repo root) still hides commute, cost, and sharing.
+
 ## Install the pilot build (students)
 
 1. Get the `dist/` folder from your group's developer (or build it below).

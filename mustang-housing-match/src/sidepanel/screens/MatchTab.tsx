@@ -45,7 +45,10 @@ export function MatchTab({ services, controller }: { services: Services; control
         />
       );
     case "review":
-      return s.review ? (
+      if (!s.review) {
+        return <div class="empty" role="alert">The review didn't load. Go back and analyze the listing again.</div>;
+      }
+      return (
         <ReviewScreen
           review={s.review}
           onEdit={(k, v) => ctl.editFact(k, v)}
@@ -55,9 +58,12 @@ export function MatchTab({ services, controller }: { services: Services; control
           onConfirm={() => void ctl.confirmReview()}
           onBack={() => ctl.go(s.listing ? "scorecard" : "analyze")}
         />
-      ) : null;
+      );
     case "scorecard":
-      return s.listing && s.scorecard ? (
+      if (!s.listing || !s.scorecard) {
+        return <div class="empty" role="alert">The scorecard didn't load. Analyze the listing again.</div>;
+      }
+      return (
         <ScorecardScreen
           listing={s.listing}
           result={s.scorecard}
@@ -70,7 +76,11 @@ export function MatchTab({ services, controller }: { services: Services; control
           onEditAddress={() => ctl.editDetails()}
           onAnother={() => ctl.analyzeAnother()}
           onPreferences={() => ctl.go("preferences")}
+          onOpenOptions={() => {
+            const open = globalThis.chrome?.runtime?.openOptionsPage;
+            if (open) void open();
+          }}
         />
-      ) : null;
+      );
   }
 }
